@@ -440,13 +440,13 @@ async function callAPI(msg, imgs) {
 
   if(imgs.length > 0 && messages.length > 0) {
     const content = [
-      {type:'text',text:msg||'Use these images for inspiration'},
+      { type: 'text', text: msg || 'Use these images for inspiration' },
       ...imgs.map(i=>({
-        type:'image',
-        source:{
-          type:'base64',
-          media_type:normalizeMediaType(i.type),
-          data:cleanBase64(i.data)
+        type: 'image',
+        source: {
+          type: 'base64',
+          media_type: i.type,
+          data: i.data
         }
       }))
     ];
@@ -457,12 +457,10 @@ async function callAPI(msg, imgs) {
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({
-      model:'claude-sonnet-4-20250514',
-      max_tokens:8096,
-      studentName,
-      sections,
-      siteData,
-      messages
+      messages: messages,
+      studentName: studentName,
+      siteData: siteData,
+      builtSections: Object.keys(sections).join(', ')
     })
   });
 

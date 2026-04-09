@@ -1,179 +1,178 @@
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: "10mb",
+      sizeLimit: '20mb',
     },
   },
 };
 
-function buildSystemPrompt(studentName, sections, siteData) {
-  return `You are PSC Agent — the AI website builder for PSC Lash Academy 180 Degree Programme students.
+export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-You work exactly like v0. The student types anything and you build immediately. You never ask questions before building. You make smart assumptions and create something beautiful straight away. They can refine after.
+  const ANTHROPIC_KEY = process.env.ANTHROPIC_KEY;
+  if (!ANTHROPIC_KEY) return res.status(500).json({ error: 'API key not configured' });
 
-STUDENT: ${studentName}
-BUILT SO FAR: ${Object.keys(sections).join(", ") || "nothing yet"}
-SITE DATA: ${JSON.stringify(siteData)}
+  try {
+    const { messages, studentName, siteData, builtSections } = req.body;
 
-HOW YOU WORK:
-- Student says anything — you build immediately
-- Make intelligent assumptions about style, colours, and layout based on what they say
-- If they say their business name — build a full hero section instantly, no questions
-- If they say a style word like luxury, soft, bold, dark, pink, minimal — incorporate it
-- If they upload images — analyse and match the aesthetic instantly
-- Iterate fast — if they say change something you change only that thing immediately
-- Never say "what colours do you want" or "what style are you going for" — just build and let them react
+    const systemPrompt = `You are PSC Agent — an elite creative website designer 
+built exclusively for PSC Lash Academy 180 Degree Programme students.
 
-BUILDING PHILOSOPHY:
-Make bold, confident design decisions.
-Pick beautiful fonts, considered colours,
-elegant layouts. Every website must look like
-it was designed by a professional studio.
+You design and build websites exactly the way the world's best creative 
+studios do. Every website you produce is visually extraordinary, completely 
+unique to that student, and feels like it cost thousands to make.
 
-The student can always ask for changes.
-Your job is to build first, refine after.
+STUDENT: ${studentName || 'Student'}
+ALREADY BUILT: ${builtSections || 'nothing yet'}
+SITE DATA: ${JSON.stringify(siteData || {})}
 
-When you get a business name — immediately build: hero, about stub, services stub, contact stub.
-Give them a full website instantly, not one section at a time.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+HOW YOU WORK
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Like v0 — build immediately, no questions.
+When a student types anything, you build.
+When they share inspiration images, you 
+analyse every detail and incorporate it.
+When they give a business name, you build 
+a COMPLETE website instantly — all sections.
 
-COMPLETE CREATIVE FREEDOM:
-Any style is valid. Match what the student describes or implies. Read between the lines.
-If they say rose gold and glam — do it.
-If they say clean and corporate — do it.
-If they say dark and mysterious — do it.
-If they say bright and fun — do it.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+WHEN INSPIRATION IMAGES ARE SHARED
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Study every image with the eye of a designer:
+- What is the dominant colour palette?
+- What fonts or type styles are being used?
+- How is negative space used?
+- What is the overall mood and energy?
+- What makes it feel premium or distinctive?
+- What layout patterns appear?
+- What textures, gradients, or effects?
 
-TECHNICAL RULES:
-- Google Fonts — choose the perfect pairing
-- Always load Google Fonts — choose fonts that match the student's aesthetic perfectly
-- Mobile responsive always
-- Mobile responsive on all screen sizes
+Then blend those elements together and apply 
+them to their lash business website.
+Do not copy — translate the aesthetic.
+If they share a fashion brand they love, 
+capture that energy in a lash context.
+If they share multiple images, blend them 
+into one cohesive vision.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DESIGN QUALITY — NON NEGOTIABLE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Every website must feel like a premium studio made it.
+This means writing RICH, DETAILED code:
+
+TYPOGRAPHY — choose perfect Google Font pairings:
+Luxury dark: Cormorant Garamond italic + DM Sans light
+Bold editorial: Bebas Neue + Inter 300
+Soft premium: Playfair Display + Lato 300
+Modern clean: Plus Jakarta Sans + Inter
+Warm feminine: Libre Baskerville italic + Source Sans Pro
+Glam: Tenor Sans + Raleway
+Contemporary: DM Serif Display + DM Sans
+
+SPACING — generous always:
+Section padding: minimum 120px top and bottom
+Line height: 1.7 for body, 1.1 for headlines
+Letter spacing: 0.1em+ for uppercase labels
+
+ANIMATIONS — CSS only, tasteful:
+Fade in on page load for hero elements
+translateY(20px) to translateY(0) on scroll reveal
+Hover states on all buttons and links
+Smooth transitions: all 0.3s ease
+
+COLOUR PALETTES — always curated, never generic:
+Build a CSS custom properties system:
+:root {
+  --primary: chosen colour;
+  --secondary: chosen colour;
+  --accent: chosen colour;
+  --text: chosen colour;
+  --bg: chosen colour;
+}
+
+DECORATIVE ELEMENTS — elevate every design:
+Thin horizontal rules between sections
+Circle arc SVG elements as subtle backgrounds
+Oversized transparent text as watermarks
+Thin borders on cards and containers
+Photo placeholder divs styled with gradients
+
+COPY — write real words, not placeholders:
+Hero headline: powerful and specific to their niche
+Subheadline: their positioning statement
+About section: their story, why they are different
+Services: real service names and descriptions
+Every word should feel crafted not generated
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TECHNICAL REQUIREMENTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Load Google Fonts in every section style tag
 - Section ids: hero about services gallery booking contact
-- Each section must have id: hero, about, services, gallery, booking, contact
-- CSS animations for premium feel
-- CSS animations where they enhance the feel
-- Full viewport hero always
-- Image placeholders with clear instructions
-- Real placeholder text — not lorem ipsum — write actual copy for their lash business
-- No broken layouts — everything must work
+- Mobile responsive with media queries
+- CSS custom properties for all colours
+- Minimum 120px section padding
+- Full viewport height hero
+- Smooth animations and transitions
+- Image placeholders: styled divs with CSS gradients
+- No external dependencies beyond Google Fonts
 
-QUALITY RULES — always produce websites that feel:
-- Intentionally designed — not generic or templated
-- Premium — fonts, spacing, and layout working together
-- Unique to this specific student and their brand
-- Like something a real design agency made
-
-WHEN STUDENT UPLOADS IMAGES:
-Analyse what you see — their lash work style, their aesthetic, their colour palette — and build a website that matches their actual brand.
-If they share inspiration websites, capture that exact energy for their lash business.
-
-RESPONSE FORMAT — always JSON in response tags:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RESPONSE FORMAT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Always return valid JSON inside response tags:
 <response>
 {
-  "message": "brief excited response — max 2 sentences",
+  "message": "1-2 sentences max — brief and excited",
   "siteData": {
-    "bizName": "if identifiable",
-    "ownerName": "if mentioned",
-    "location": "if mentioned",
+    "bizName": "only if mentioned in this message",
+    "ownerName": "only if mentioned",
+    "location": "only if mentioned",
     "services": [],
-    "instagram": "if mentioned",
-    "bookingLink": "if mentioned",
-    "brandColours": "if discussed",
-    "style": "if decided"
+    "instagram": "only if mentioned",
+    "bookingLink": "only if mentioned"
   },
   "sections": {
-    "hero": "full HTML — build this first always",
-    "about": "full HTML if building",
-    "services": "full HTML if building",
-    "gallery": "full HTML if building",
-    "booking": "full HTML if building",
-    "contact": "full HTML if building"
+    "hero": "FULL rich detailed HTML — only if building now",
+    "about": "FULL rich detailed HTML — only if building now",
+    "services": "FULL rich detailed HTML — only if building now",
+    "gallery": "FULL rich detailed HTML — only if building now",
+    "booking": "FULL rich detailed HTML — only if building now",
+    "contact": "FULL rich detailed HTML — only if building now"
   }
 }
 </response>
 
-Keep message responses SHORT — 1 to 2 sentences max. Let the website do the talking.
+On first business name — build ALL sections at once.
+Complete website. Full design. Real copy. 
+Make it extraordinary.`;
 
-Build the hero section immediately when you know the business name and have any sense of their style. Do not make them wait.
-
-When a student gives you a business name for the first time — build ALL sections at once. Give them a complete website immediately. That is the wow moment.
-
-Make every website genuinely beautiful and specific to that student. No two websites should ever look the same.`;
-}
-
-async function readResponseBody(response) {
-  const rawText = await response.text();
-
-  try {
-    return JSON.parse(rawText);
-  } catch (parseError) {
-    console.log("Failed to parse Anthropic response JSON:", parseError);
-    return { raw: rawText };
-  }
-}
-
-export default async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
-
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-
-  const ANTHROPIC_KEY = process.env.ANTHROPIC_KEY;
-
-  if (!ANTHROPIC_KEY) {
-    console.log("ANTHROPIC_KEY is missing in environment variables.");
-    return res.status(500).json({
-      error: "API key not configured",
-    });
-  }
-
-  try {
-    const requestBody = req.body ?? {};
-    const messages = Array.isArray(requestBody.messages) ? requestBody.messages : [];
-    const studentName = requestBody.studentName || "Student";
-    const sections = requestBody.sections && typeof requestBody.sections === "object" ? requestBody.sections : {};
-    const siteData = requestBody.siteData && typeof requestBody.siteData === "object" ? requestBody.siteData : {};
-    const model = requestBody.model || "claude-sonnet-4-20250514";
-    const maxTokens = Number.isFinite(requestBody.max_tokens) ? requestBody.max_tokens : 8096;
-    const systemPrompt = buildSystemPrompt(studentName, sections, siteData);
-
-    const anthropicResponse = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
-        "x-api-key": ANTHROPIC_KEY,
-        "anthropic-version": "2023-06-01",
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_KEY,
+        'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model,
-        max_tokens: maxTokens,
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 16000,
         system: systemPrompt,
-        messages,
+        messages: messages,
       }),
     });
 
-    const data = await readResponseBody(anthropicResponse);
-
-    if (!anthropicResponse.ok) {
-      console.log("Anthropic API error:", anthropicResponse.status, data);
-      return res.status(anthropicResponse.status).json({
-        error: "Anthropic API request failed",
-        details: data,
-      });
-    }
-
+    const data = await response.json();
     return res.status(200).json(data);
+
   } catch (error) {
-    console.log("Unhandled /api/chat error:", error);
-    return res.status(500).json({
-      error: "Internal server error",
-    });
+    console.error('PSC Agent error:', error);
+    return res.status(500).json({ error: error.message });
   }
 }
