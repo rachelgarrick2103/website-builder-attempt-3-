@@ -72,6 +72,16 @@ body{font-family:'Inter',sans-serif;font-weight:300;background:var(--black);colo
 .chip{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.09);color:var(--g3);font-family:'Inter',sans-serif;font-size:9.5px;padding:5px 10px;cursor:pointer;transition:all 0.15s;white-space:nowrap}
 .chip:hover{background:rgba(255,255,255,0.12);color:var(--white);border-color:rgba(255,255,255,0.2)}
 
+/* Photo slots */
+.photo-panel{padding:10px 14px 8px;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0}
+.photo-head{font-size:9px;letter-spacing:0.16em;color:var(--g4);text-transform:uppercase;margin-bottom:8px}
+.photo-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;max-height:180px;overflow:auto;padding-right:2px}
+.photo-slot{border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);padding:6px;cursor:pointer;transition:all 0.2s}
+.photo-slot:hover{border-color:rgba(255,255,255,0.28);background:rgba(255,255,255,0.08)}
+.photo-thumb{width:100%;height:52px;object-fit:cover;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08)}
+.photo-label{display:block;margin-top:5px;font-size:9px;color:var(--g3);letter-spacing:0.05em}
+.photo-empty{display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--g4)}
+
 /* Input */
 .chat-input-area{border-top:1px solid rgba(255,255,255,0.06);padding:12px 14px;flex-shrink:0}
 .input-wrap{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);transition:border-color 0.2s}
@@ -106,6 +116,10 @@ body{font-family:'Inter',sans-serif;font-weight:300;background:var(--black);colo
 .stab{padding:9px 14px;font-size:9px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;color:var(--g3);border-bottom:2px solid transparent;background:none;border-left:none;border-right:none;border-top:none;white-space:nowrap;transition:all 0.15s}
 .stab:hover{color:var(--black)}
 .stab.act{color:var(--black);border-bottom-color:var(--black)}
+.stab-wrap{display:flex;align-items:center;border-right:1px solid var(--g2)}
+.stab-move{background:none;border:none;color:var(--g3);font-size:10px;padding:0 5px;cursor:pointer}
+.stab-move:hover{color:var(--black)}
+.stab-wrap.dragging{opacity:0.45}
 .prev-wrap{flex:1;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:18px;transition:all 0.3s;background:var(--g1)}
 .prev-wrap.mob{background:var(--g1)}
 #pframe{width:100%;border:none;background:var(--white);flex-shrink:0;min-height:500px}
@@ -137,6 +151,49 @@ body{font-family:'Inter',sans-serif;font-weight:300;background:var(--black);colo
 .edit-toolbar.show{display:flex}
 .edit-btn{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:var(--white);font-size:10px;line-height:1;padding:6px 8px;cursor:pointer;min-width:30px}
 .edit-btn:hover{background:rgba(255,255,255,0.18)}
+.edit-color{width:28px;height:26px;padding:0;border:none;background:none;cursor:pointer}
+
+/* Tool panels */
+.tool-panel{position:fixed;top:66px;right:16px;width:290px;background:var(--white);color:var(--black);border:1px solid var(--g2);box-shadow:0 20px 40px rgba(0,0,0,0.18);padding:14px;display:none;z-index:1100}
+.tool-panel.show{display:block}
+.panel-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:0.06em;margin-bottom:10px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:8px 0}
+.row label{font-size:11px;color:#666}
+.row input[type="color"],.row select{width:120px;height:30px;border:1px solid #ddd;background:#fff}
+.font-list{display:grid;gap:6px;max-height:240px;overflow:auto}
+.font-item{border:1px solid #ddd;background:#fafafa;padding:8px;cursor:pointer}
+.font-item:hover{background:#f2f2f2}
+.hist-list{display:grid;gap:7px;max-height:260px;overflow:auto}
+.hist-btn{border:1px solid #ddd;background:#fff;padding:8px;text-align:left;cursor:pointer;font-size:11px}
+.share-link{width:100%;padding:8px;border:1px solid #ddd;font-size:11px}
+.panel-btn{margin-top:8px;border:none;background:var(--black);color:var(--white);padding:8px 10px;font-size:10px;letter-spacing:0.12em;cursor:pointer}
+
+/* Domain instructions */
+.domain-panel{margin-top:12px;padding:12px;border:1px solid var(--g2);text-align:left;display:none}
+.domain-title{font-size:12px;font-weight:600;color:var(--black);margin-bottom:8px;letter-spacing:0.06em;text-transform:uppercase}
+.domain-panel ol{padding-left:18px}
+.domain-panel li{font-size:11px;color:#666;line-height:1.5;margin:4px 0}
+
+/* Mobile builder mode */
+.mobile-view-toggle{display:none;position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:1300;background:var(--black);color:var(--white);border:1px solid rgba(255,255,255,0.25);padding:10px 14px;font-size:10px;letter-spacing:0.12em;text-transform:uppercase}
+
+@media (max-width: 768px){
+  html,body{overflow:auto;height:auto}
+  #app{flex-direction:column;height:100vh}
+  .preview-panel{order:1;height:54vh}
+  .chat-panel{order:2;width:100%;height:46vh;border-right:none;border-top:1px solid rgba(255,255,255,0.08)}
+  .chat-top{padding:10px 12px}
+  .prev-bar{padding:8px 10px}
+  .prev-right{gap:4px;flex-wrap:wrap;justify-content:flex-end}
+  .dev-btn{padding:4px 7px}
+  .sec-tabs{overflow-x:auto;white-space:nowrap}
+  .tool-panel{left:10px;right:10px;width:auto;top:56px}
+  .mobile-view-toggle{display:block}
+  body.mobile-chat-only .preview-panel{display:none}
+  body.mobile-chat-only .chat-panel{height:calc(100vh - 62px)}
+  body.mobile-preview-only .chat-panel{display:none}
+  body.mobile-preview-only .preview-panel{height:calc(100vh - 62px)}
+}
 </style>
 </head>
 <body>
@@ -177,6 +234,10 @@ body{font-family:'Inter',sans-serif;font-weight:300;background:var(--black);colo
       </div>
     </div>
     <div class="chat-msgs" id="msgs"></div>
+    <div class="photo-panel">
+      <div class="photo-head">Website photos</div>
+      <div class="photo-grid" id="photoGrid"></div>
+    </div>
     <div class="chips" id="chips">
       <div class="chip" onclick="sc('Build my hero section')">Build hero</div>
       <div class="chip" onclick="sc('I want a dark luxury look')">Dark luxury</div>
@@ -215,18 +276,16 @@ body{font-family:'Inter',sans-serif;font-weight:300;background:var(--black);colo
       </div>
       <div class="prev-right">
         <div class="prev-status" id="prevStatus">Ready</div>
+        <button class="dev-btn" onclick="togglePanel('colourPanel')">Colours</button>
+        <button class="dev-btn" onclick="togglePanel('fontPanel')">Fonts</button>
+        <button class="dev-btn" onclick="togglePanel('historyPanel')">History</button>
+        <button class="dev-btn" onclick="createShareLink()">Share</button>
+        <button class="dev-btn" onclick="downloadWebsiteZip()">Download</button>
         <button class="dev-btn act" onclick="setDev('desktop',this)">Desktop</button>
         <button class="dev-btn" onclick="setDev('mobile',this)">Mobile</button>
       </div>
     </div>
-    <div class="sec-tabs">
-      <button class="stab act" data-sec="hero" onclick="scrollSec(this)">Hero</button>
-      <button class="stab" data-sec="about" onclick="scrollSec(this)">About</button>
-      <button class="stab" data-sec="services" onclick="scrollSec(this)">Services</button>
-      <button class="stab" data-sec="gallery" onclick="scrollSec(this)">Gallery</button>
-      <button class="stab" data-sec="booking" onclick="scrollSec(this)">Booking</button>
-      <button class="stab" data-sec="contact" onclick="scrollSec(this)">Contact</button>
-    </div>
+    <div class="sec-tabs" id="secTabs"></div>
     <div class="prev-wrap" id="prevWrap">
       <div class="prev-empty" id="prevEmpty">
         <div class="prev-empty-icon">PSC</div>
@@ -246,6 +305,14 @@ body{font-family:'Inter',sans-serif;font-weight:300;background:var(--black);colo
     <div class="ov-url" id="ovUrl">yoursite.pscsites.com</div>
     <button class="ov-btn" id="ovMainBtn" onclick="confirmDeploy()">Make It Live →</button>
     <button class="ov-btn sec" onclick="closeOv()">Back to Builder</button>
+    <div class="domain-panel" id="domainPanel">
+      <div class="domain-title">Use your own domain</div>
+      <ol>
+        <li>Buy a domain at namecheap.com</li>
+        <li>Add a CNAME record pointing to <b>pscsites.com</b></li>
+        <li>Email <b>hello@psclashes.com</b> with your domain name to connect it</li>
+      </ol>
+    </div>
   </div>
 </div>
 
@@ -255,15 +322,57 @@ body{font-family:'Inter',sans-serif;font-weight:300;background:var(--black);colo
   <button class="edit-btn" onclick="toolbarAction('italic')"><i>I</i></button>
   <button class="edit-btn" onclick="toolbarAction('sizeUp')">A+</button>
   <button class="edit-btn" onclick="toolbarAction('sizeDown')">A-</button>
+  <input id="editColorInput" class="edit-color" type="color" value="#111111" onchange="toolbarAction('color', this.value)">
 </div>
+<div class="tool-panel" id="colourPanel">
+  <div class="panel-title">Colours</div>
+  <div class="row"><label>Background</label><input type="color" id="bgColor" onchange="onPaletteChange()"></div>
+  <div class="row"><label>Text</label><input type="color" id="textColor" onchange="onPaletteChange()"></div>
+  <div class="row"><label>Accent</label><input type="color" id="accentColor" onchange="onPaletteChange()"></div>
+</div>
+<div class="tool-panel" id="fontPanel">
+  <div class="panel-title">Fonts</div>
+  <div class="font-list" id="fontList"></div>
+</div>
+<div class="tool-panel" id="historyPanel">
+  <div class="panel-title">Version History</div>
+  <div class="hist-list" id="historyList"></div>
+</div>
+<div class="tool-panel" id="sharePanel">
+  <div class="panel-title">Share Preview</div>
+  <input id="shareLinkInput" class="share-link" readonly>
+  <button class="panel-btn" onclick="copyShareLink()">Copy Link</button>
+</div>
+<button class="mobile-view-toggle" id="mobileViewToggle" onclick="toggleMobileView()">Show Chat</button>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
-// ── CONFIG ──────────────────────────────────────────────────────
-const API_ENDPOINT = '/api/chat'; // Vercel serverless function
-const ACCESS_PW = 'PSC180'; // Accepts PSC180-ANYTHING
-const SECTION_ORDER = ['hero','about','services','gallery','booking','contact'];
+const API_ENDPOINT = '/api/chat';
+const SECTION_DEFAULT_ORDER = ['hero', 'about', 'services', 'gallery', 'booking', 'contact'];
+const SHARE_BASE_URL = 'https://website-builder-attempt-3.vercel.app';
+const PREVIEW_MATCH = window.location.pathname.match(/^\/preview\/([^/]+)$/);
+const IS_PREVIEW_ROUTE = Boolean(PREVIEW_MATCH);
+const PHOTO_SLOTS = [
+  { key: 'hero', label: 'Hero', section: 'hero' },
+  { key: 'about', label: 'About', section: 'about' },
+  { key: 'gallery_1', label: 'Gallery 1', section: 'gallery' },
+  { key: 'gallery_2', label: 'Gallery 2', section: 'gallery' },
+  { key: 'gallery_3', label: 'Gallery 3', section: 'gallery' },
+  { key: 'gallery_4', label: 'Gallery 4', section: 'gallery' },
+  { key: 'gallery_5', label: 'Gallery 5', section: 'gallery' },
+  { key: 'gallery_6', label: 'Gallery 6', section: 'gallery' },
+];
+const FONT_PRESETS = {
+  editorial: { label: 'Editorial: Bebas Neue + Inter', heading: "'Bebas Neue'", body: "'Inter'", query: 'family=Bebas+Neue&family=Inter:wght@300;400;500;600' },
+  luxury: { label: 'Luxury: Cormorant Garamond + DM Sans', heading: "'Cormorant Garamond'", body: "'DM Sans'", query: 'family=Cormorant+Garamond:ital,wght@0,400;1,500&family=DM+Sans:wght@300;400;500' },
+  modern: { label: 'Modern: Plus Jakarta Sans + Inter', heading: "'Plus Jakarta Sans'", body: "'Inter'", query: 'family=Plus+Jakarta+Sans:wght@400;600;700&family=Inter:wght@300;400;500' },
+  soft: { label: 'Soft: Playfair Display + Lato', heading: "'Playfair Display'", body: "'Lato'", query: 'family=Playfair+Display:wght@400;600;700&family=Lato:wght@300;400;700' },
+  bold: { label: 'Bold: Oswald + Nunito', heading: "'Oswald'", body: "'Nunito'", query: 'family=Oswald:wght@400;600&family=Nunito:wght@300;400;600' },
+  elegant: { label: 'Elegant: DM Serif Display + DM Sans', heading: "'DM Serif Display'", body: "'DM Sans'", query: 'family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500' },
+  warm: { label: 'Warm: Libre Baskerville + Source Sans', heading: "'Libre Baskerville'", body: "'Source Sans 3'", query: 'family=Libre+Baskerville:ital,wght@0,400;1,400&family=Source+Sans+3:wght@300;400;600' },
+  glam: { label: 'Glam: Tenor Sans + Raleway', heading: "'Tenor Sans'", body: "'Raleway'", query: 'family=Tenor+Sans&family=Raleway:wght@300;400;600' },
+};
 
-// ── STATE ───────────────────────────────────────────────────────
 let studentName = '';
 let studentCode = '';
 let sections = {};
@@ -271,126 +380,615 @@ let history = [];
 let pendingImgs = [];
 let busy = false;
 let siteData = {};
+let photos = {};
+let sectionOrder = [...SECTION_DEFAULT_ORDER];
+let versions = [];
+let activeSectionTab = 'hero';
+let palette = { bg: '#ffffff', text: '#141414', accent: '#a67c52' };
+let fontPresetKey = 'editorial';
 let previewSaveTimer = null;
+let draggedSection = null;
+let versionDebounceTimer = null;
 
-// ── LOGIN ────────────────────────────────────────────────────────
-function doLogin() {
-  const val = document.getElementById('codeIn').value.trim().toUpperCase();
-  const err = document.getElementById('loginErr');
-  const inp = document.getElementById('codeIn');
-  const valid = val.startsWith('PSC180');
-  if (valid) {
-    studentCode = val;
-    studentName = val.includes('-') ? val.split('-').slice(1).join(' ') : 'Student';
-    localStorage.setItem('psc_code', val);
-    localStorage.setItem('psc_name', studentName);
-    loadSaved();
-    document.getElementById('login').style.display = 'none';
-    document.getElementById('app').style.display = 'flex';
-    resizeFrame();
-    if (history.length === 0) {
-      setTimeout(() => {
-        addMsg('agent', `Welcome to PSC Agent, **${studentName}**.\n\nTell me anything about your lash brand and I will build immediately.`);
-      }, 500);
-    } else {
-      restoreChat();
-    }
-  } else {
-    inp.classList.add('shake');
-    err.textContent = 'Invalid access code. Check your 180° Programme welcome email.';
-    setTimeout(() => inp.classList.remove('shake'), 400);
-  }
+function nowId() {
+  return `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
-// Auto-login
-(function(){
-  const c = localStorage.getItem('psc_code');
-  if(c && c.startsWith('PSC180')){
-    document.getElementById('codeIn').value = c;
-    doLogin();
-  }
-})();
+function safeJsonParse(raw, fallback) {
+  try { return JSON.parse(raw); } catch (_) { return fallback; }
+}
 
-// ── SAVE / LOAD ──────────────────────────────────────────────────
-function save() {
-  localStorage.setItem('psc_site_'+studentCode, JSON.stringify({sections,history:history.slice(-30),siteData}));
-  showToast('Saved');
+function relativeTime(ts) {
+  const sec = Math.max(1, Math.floor((Date.now() - ts) / 1000));
+  if (sec < 60) return `${sec} second${sec === 1 ? '' : 's'} ago`;
+  const min = Math.floor(sec / 60);
+  if (min < 60) return `${min} minute${min === 1 ? '' : 's'} ago`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr} hour${hr === 1 ? '' : 's'} ago`;
+  const day = Math.floor(hr / 24);
+  return `${day} day${day === 1 ? '' : 's'} ago`;
+}
+
+function photoDataUri(slotKey) {
+  const p = photos[slotKey];
+  if (!p || !p.data) return '';
+  return `data:${p.type || 'image/jpeg'};base64,${p.data}`;
+}
+
+function persistPhoto(slotKey, photo) {
+  photos[slotKey] = photo;
+  localStorage.setItem(`photo_${slotKey}`, JSON.stringify(photo));
+  if (studentCode) localStorage.setItem(`psc_photo_${studentCode}_${slotKey}`, JSON.stringify(photo));
+}
+
+function loadPhotosFromStorage() {
+  PHOTO_SLOTS.forEach(slot => {
+    const byStudent = studentCode ? localStorage.getItem(`psc_photo_${studentCode}_${slot.key}`) : null;
+    const global = localStorage.getItem(`photo_${slot.key}`);
+    const value = byStudent || global;
+    if (value) photos[slot.key] = safeJsonParse(value, null) || photos[slot.key];
+  });
+}
+
+function save(showSavedToast = true) {
+  if (!studentCode) return;
+  localStorage.setItem(
+    `psc_site_${studentCode}`,
+    JSON.stringify({
+      sections,
+      history: history.slice(-30),
+      siteData,
+      photos,
+      sectionOrder,
+      versions,
+      palette,
+      fontPresetKey,
+    }),
+  );
+  if (showSavedToast) showToast('Saved');
 }
 
 function loadSaved() {
-  const d = localStorage.getItem('psc_site_'+studentCode);
-  if(d) {
-    const p = JSON.parse(d);
-    sections = p.sections || {};
-    history = p.history || [];
-    siteData = p.siteData || {};
-    if(Object.keys(sections).length > 0) updatePreview();
-    updateSlug();
+  const raw = localStorage.getItem(`psc_site_${studentCode}`);
+  if (raw) {
+    const parsed = safeJsonParse(raw, {});
+    sections = parsed.sections || {};
+    history = parsed.history || [];
+    siteData = parsed.siteData || {};
+    photos = parsed.photos || {};
+    sectionOrder = Array.isArray(parsed.sectionOrder) && parsed.sectionOrder.length
+      ? parsed.sectionOrder.filter(id => SECTION_DEFAULT_ORDER.includes(id))
+      : [...SECTION_DEFAULT_ORDER];
+    versions = Array.isArray(parsed.versions) ? parsed.versions.slice(0, 10) : [];
+    palette = parsed.palette || palette;
+    fontPresetKey = parsed.fontPresetKey || fontPresetKey;
+  }
+  loadPhotosFromStorage();
+  renderPhotoPanel();
+  renderSectionTabs();
+  renderFontPanel();
+  renderHistoryPanel();
+  syncPaletteInputs();
+  if (Object.keys(sections).length > 0) updatePreview();
+  updateSlug();
+}
+
+function pushVersion(reason) {
+  if (!Object.keys(sections).length) return;
+  versions.unshift({
+    id: nowId(),
+    timestamp: Date.now(),
+    reason: reason || 'update',
+    state: {
+      sections,
+      siteData,
+      sectionOrder,
+      palette,
+      fontPresetKey,
+    },
+  });
+  versions = versions.slice(0, 10);
+  renderHistoryPanel();
+  save(false);
+}
+
+function scheduleVersion(reason) {
+  clearTimeout(versionDebounceTimer);
+  versionDebounceTimer = setTimeout(() => pushVersion(reason), 700);
+}
+
+function restoreVersion(index) {
+  const v = versions[index];
+  if (!v || !v.state) return;
+  sections = { ...(v.state.sections || {}) };
+  siteData = { ...(v.state.siteData || {}) };
+  sectionOrder = [...(v.state.sectionOrder || SECTION_DEFAULT_ORDER)];
+  palette = { ...(v.state.palette || palette) };
+  fontPresetKey = v.state.fontPresetKey || fontPresetKey;
+  activeSectionTab = sectionOrder[0] || 'hero';
+  renderSectionTabs();
+  renderFontPanel();
+  syncPaletteInputs();
+  updatePreview();
+  updateSlug();
+  save();
+  closePanels();
+  showToast('Version restored');
+}
+
+function renderHistoryPanel() {
+  const list = document.getElementById('historyList');
+  if (!list) return;
+  list.innerHTML = '';
+  if (!versions.length) {
+    list.innerHTML = '<div style="font-size:11px;color:#777">No saved versions yet.</div>';
+    return;
+  }
+  versions.forEach((v, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'hist-btn';
+    btn.textContent = `Version ${versions.length - idx} — ${relativeTime(v.timestamp)}`;
+    btn.onclick = () => restoreVersion(idx);
+    list.appendChild(btn);
+  });
+}
+
+function renderFontPanel() {
+  const list = document.getElementById('fontList');
+  if (!list) return;
+  list.innerHTML = '';
+  Object.entries(FONT_PRESETS).forEach(([key, cfg]) => {
+    const item = document.createElement('div');
+    item.className = 'font-item';
+    item.style.borderColor = key === fontPresetKey ? '#0A0A0A' : '#ddd';
+    item.innerHTML = `<div style="font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:#777;margin-bottom:4px">${cfg.label.split(':')[0]}</div>
+      <div style="font-family:${cfg.heading};font-size:19px;line-height:1.2">Lash Studio</div>
+      <div style="font-family:${cfg.body};font-size:12px;opacity:0.8">Elevated beauty branding</div>`;
+    item.onclick = () => {
+      fontPresetKey = key;
+      renderFontPanel();
+      updatePreview();
+      save();
+      pushVersion('font');
+    };
+    list.appendChild(item);
+  });
+}
+
+function syncPaletteInputs() {
+  const bg = document.getElementById('bgColor');
+  const text = document.getElementById('textColor');
+  const accent = document.getElementById('accentColor');
+  if (bg) bg.value = palette.bg;
+  if (text) text.value = palette.text;
+  if (accent) accent.value = palette.accent;
+}
+
+function onPaletteChange() {
+  palette.bg = document.getElementById('bgColor').value;
+  palette.text = document.getElementById('textColor').value;
+  palette.accent = document.getElementById('accentColor').value;
+  updatePreview();
+  save();
+  pushVersion('palette');
+}
+
+function togglePanel(id) {
+  const panel = document.getElementById(id);
+  if (!panel) return;
+  const willShow = !panel.classList.contains('show');
+  closePanels();
+  if (willShow) panel.classList.add('show');
+}
+
+function closePanels() {
+  document.querySelectorAll('.tool-panel').forEach(p => p.classList.remove('show'));
+}
+
+function renderSectionTabs() {
+  const wrap = document.getElementById('secTabs');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  sectionOrder.forEach((sec, idx) => {
+    const holder = document.createElement('div');
+    holder.className = 'stab-wrap';
+    holder.draggable = true;
+    holder.dataset.sec = sec;
+    holder.ondragstart = () => {
+      draggedSection = sec;
+      holder.classList.add('dragging');
+    };
+    holder.ondragend = () => holder.classList.remove('dragging');
+    holder.ondragover = e => e.preventDefault();
+    holder.ondrop = e => {
+      e.preventDefault();
+      if (!draggedSection || draggedSection === sec) return;
+      const from = sectionOrder.indexOf(draggedSection);
+      const to = sectionOrder.indexOf(sec);
+      sectionOrder.splice(from, 1);
+      sectionOrder.splice(to, 0, draggedSection);
+      draggedSection = null;
+      renderSectionTabs();
+      updatePreview();
+      save();
+      pushVersion('reorder');
+    };
+
+    const btn = document.createElement('button');
+    btn.className = `stab ${activeSectionTab === sec ? 'act' : ''}`;
+    btn.textContent = sec.charAt(0).toUpperCase() + sec.slice(1);
+    btn.dataset.sec = sec;
+    btn.onclick = () => scrollSec(sec);
+
+    const up = document.createElement('button');
+    up.className = 'stab-move';
+    up.textContent = '↑';
+    up.onclick = e => {
+      e.stopPropagation();
+      if (idx === 0) return;
+      const tmp = sectionOrder[idx - 1];
+      sectionOrder[idx - 1] = sectionOrder[idx];
+      sectionOrder[idx] = tmp;
+      renderSectionTabs();
+      updatePreview();
+      save();
+      pushVersion('reorder');
+    };
+
+    const down = document.createElement('button');
+    down.className = 'stab-move';
+    down.textContent = '↓';
+    down.onclick = e => {
+      e.stopPropagation();
+      if (idx === sectionOrder.length - 1) return;
+      const tmp = sectionOrder[idx + 1];
+      sectionOrder[idx + 1] = sectionOrder[idx];
+      sectionOrder[idx] = tmp;
+      renderSectionTabs();
+      updatePreview();
+      save();
+      pushVersion('reorder');
+    };
+
+    holder.appendChild(btn);
+    holder.appendChild(up);
+    holder.appendChild(down);
+    wrap.appendChild(holder);
+  });
+}
+
+function scrollSec(target) {
+  const sec = typeof target === 'string' ? target : target?.dataset?.sec;
+  if (!sec) return;
+  activeSectionTab = sec;
+  document.querySelectorAll('.stab').forEach(tab => tab.classList.toggle('act', tab.dataset.sec === sec));
+  try {
+    document.getElementById('pframe').contentWindow.document.getElementById(sec)?.scrollIntoView({ behavior: 'smooth' });
+  } catch (_) {}
+}
+
+function photoSlotsForSection(sectionId) {
+  if (sectionId === 'hero') return ['hero'];
+  if (sectionId === 'about') return ['about'];
+  if (sectionId === 'gallery') return ['gallery_1', 'gallery_2', 'gallery_3', 'gallery_4', 'gallery_5', 'gallery_6'];
+  return [];
+}
+
+function injectImageIntoTarget(target, dataUri, slotKey, altText) {
+  if (!target) return;
+  const doc = target.ownerDocument;
+  const img = doc.createElement('img');
+  img.src = dataUri;
+  img.alt = altText;
+  img.setAttribute('data-photo-slot', slotKey);
+  img.style.width = '100%';
+  img.style.height = '100%';
+  img.style.objectFit = 'cover';
+  if (target.tagName.toLowerCase() === 'img') {
+    target.src = dataUri;
+    target.alt = altText;
+    target.setAttribute('data-photo-slot', slotKey);
+    target.style.objectFit = 'cover';
+    return;
+  }
+  target.innerHTML = '';
+  target.appendChild(img);
+}
+
+function injectSectionPhotos(sectionId, html) {
+  if (!html) return html;
+  const slots = photoSlotsForSection(sectionId);
+  if (!slots.length) return html;
+
+  const template = document.createElement('template');
+  template.innerHTML = html.trim();
+  const root = template.content.firstElementChild || template.content;
+  if (!root) return html;
+
+  slots.forEach((slot, idx) => {
+    const src = photoDataUri(slot);
+    if (!src) return;
+    let target = root.querySelector(`[data-photo-slot="${slot}"]`);
+    if (!target) {
+      const imgs = root.querySelectorAll('img');
+      if (imgs[idx]) target = imgs[idx];
+    }
+    if (!target) {
+      const candidates = root.querySelectorAll('.photo-placeholder,.image-placeholder,.img-placeholder,[class*="photo"],[class*="image"],figure,div');
+      if (candidates[idx]) target = candidates[idx];
+    }
+    if (!target) {
+      const holder = document.createElement('div');
+      holder.style.marginTop = '20px';
+      holder.style.minHeight = '220px';
+      holder.style.background = 'linear-gradient(135deg,#eee,#ddd)';
+      root.appendChild(holder);
+      target = holder;
+    }
+    injectImageIntoTarget(target, src, slot, slot.replace('_', ' '));
+  });
+
+  return root.outerHTML || html;
+}
+
+function hydrateSectionsWithPhotos(sectionPatch) {
+  const next = {};
+  Object.keys(sectionPatch || {}).forEach(key => {
+    next[key] = injectSectionPhotos(key, sectionPatch[key]);
+  });
+  return next;
+}
+
+function getActiveFontPreset() {
+  return FONT_PRESETS[fontPresetKey] || FONT_PRESETS.editorial;
+}
+
+function buildCompleteSiteHtml() {
+  const preset = getActiveFontPreset();
+  const fontHref = `https://fonts.googleapis.com/css2?${preset.query}&display=swap`;
+  const orderedSections = sectionOrder.map(id => injectSectionPhotos(id, sections[id] || '')).join('\n');
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="${fontHref}" rel="stylesheet">
+<style>
+  :root{
+    --bg:${palette.bg};
+    --text:${palette.text};
+    --accent:${palette.accent};
+    --font-heading:${preset.heading};
+    --font-body:${preset.body};
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-body),sans-serif;
+    line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4,h5,h6{font-family:var(--font-heading),serif;line-height:1.1}
+  a,button,[class*="btn"],[data-psc-accent]{color:var(--accent)}
+  img{max-width:100%;display:block}
+  section{padding:120px 24px}
+  @media(max-width:768px){section{padding:80px 20px}}
+</style>
+</head>
+<body>${orderedSections}</body>
+</html>`;
+}
+
+function updatePreview() {
+  const frame = document.getElementById('pframe');
+  const empty = document.getElementById('prevEmpty');
+  if (!Object.keys(sections).length) {
+    frame.style.display = 'none';
+    empty.style.display = 'flex';
+    return;
+  }
+  frame.srcdoc = buildCompleteSiteHtml();
+  frame.style.display = 'block';
+  empty.style.display = 'none';
+  resizeFrame();
+}
+
+function resizeFrame() {
+  const wrap = document.getElementById('prevWrap');
+  const frame = document.getElementById('pframe');
+  if (!wrap.classList.contains('mob')) frame.style.height = `${window.innerHeight - 112}px`;
+}
+
+function setDev(mode, btn) {
+  document.querySelectorAll('.dev-btn').forEach(b => {
+    if (b.textContent === 'Desktop' || b.textContent === 'Mobile') b.classList.remove('act');
+  });
+  btn.classList.add('act');
+  const wrap = document.getElementById('prevWrap');
+  const frame = document.getElementById('pframe');
+  if (mode === 'mobile') {
+    wrap.classList.add('mob');
+    frame.style.width = '390px';
+    frame.style.height = '844px';
+  } else {
+    wrap.classList.remove('mob');
+    frame.style.width = '100%';
+    frame.style.height = `${window.innerHeight - 112}px`;
   }
 }
 
-function restoreChat() {
-  history.slice(-6).forEach(m => addMsg(m.role==='user'?'user':'agent', m.content, false));
-  addMsg('agent', `Welcome back, **${studentName}**! Your website is loaded. What would you like to change or add?`);
+function setStatus(text) {
+  document.getElementById('prevStatus').textContent = text;
 }
 
-// ── MESSAGES ─────────────────────────────────────────────────────
-function addMsg(role, content, animate=true) {
+function updateSlug() {
+  const slug = (siteData.bizName || studentName || 'yoursite').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  document.getElementById('urlSlug').textContent = slug || 'yoursite';
+  document.getElementById('ovUrl').textContent = `${slug || 'yoursite'}.pscsites.com`;
+}
+
+function renderPhotoPanel() {
+  const grid = document.getElementById('photoGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  PHOTO_SLOTS.forEach(slot => {
+    const card = document.createElement('div');
+    card.className = 'photo-slot';
+    const src = photoDataUri(slot.key);
+    card.innerHTML = src
+      ? `<img class="photo-thumb" src="${src}" alt="${slot.label}"><span class="photo-label">${slot.label}</span>`
+      : `<div class="photo-thumb photo-empty">Add photo</div><span class="photo-label">${slot.label}</span>`;
+
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.style.display = 'none';
+    fileInput.onchange = async e => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async ev => {
+        const base64 = String(ev.target.result).split(',')[1] || '';
+        persistPhoto(slot.key, { type: file.type || 'image/jpeg', data: base64 });
+        renderPhotoPanel();
+        await regenerateSectionForPhoto(slot);
+        save();
+        showToast(`${slot.label} photo updated`);
+      };
+      reader.readAsDataURL(file);
+      fileInput.value = '';
+    };
+
+    card.onclick = () => fileInput.click();
+    card.appendChild(fileInput);
+    grid.appendChild(card);
+  });
+}
+
+async function regenerateSectionForPhoto(slot) {
+  const targetSection = slot.section;
+  if (busy) return;
+  try {
+    const msg = `Rebuild only the ${targetSection} section using the uploaded ${slot.label} image.`;
+    const resp = await callAPI(msg, [{ type: photos[slot.key]?.type || 'image/jpeg', data: photos[slot.key]?.data || '' }]);
+    if (resp.sections && resp.sections[targetSection]) {
+      sections[targetSection] = injectSectionPhotos(targetSection, resp.sections[targetSection]);
+      updatePreview();
+      pushVersion('photo-ai');
+    } else if (sections[targetSection]) {
+      sections[targetSection] = injectSectionPhotos(targetSection, sections[targetSection]);
+      updatePreview();
+      pushVersion('photo');
+    }
+  } catch (err) {
+    console.log('Photo regeneration failed:', err);
+    if (sections[targetSection]) {
+      sections[targetSection] = injectSectionPhotos(targetSection, sections[targetSection]);
+      updatePreview();
+      pushVersion('photo-fallback');
+    }
+  }
+}
+
+function handleImgs(e) {
+  Array.from(e.target.files).slice(0, 6).forEach(file => {
+    const r = new FileReader();
+    r.onload = ev => {
+      const b64 = String(ev.target.result).split(',')[1];
+      pendingImgs.push({ data: b64, type: file.type || 'image/jpeg' });
+      const thumbs = document.getElementById('thumbs');
+      const wrap = document.createElement('div');
+      wrap.className = 'thumb-wrap';
+      const img = document.createElement('img');
+      img.src = ev.target.result;
+      img.className = 'thumb-img';
+      const rm = document.createElement('div');
+      rm.className = 'thumb-rm';
+      rm.textContent = '×';
+      rm.onclick = () => {
+        const idx = Array.from(thumbs.children).indexOf(wrap);
+        pendingImgs.splice(idx, 1);
+        wrap.remove();
+      };
+      wrap.appendChild(img);
+      wrap.appendChild(rm);
+      thumbs.appendChild(wrap);
+    };
+    r.readAsDataURL(file);
+  });
+  e.target.value = '';
+}
+
+function clearThumbs() {
+  document.getElementById('thumbs').innerHTML = '';
+}
+
+function addMsg(role, content, animate = true) {
   const wrap = document.getElementById('msgs');
   const div = document.createElement('div');
-  div.className = 'msg ' + role;
-  if(!animate) div.style.animation = 'none';
-  const init = role==='agent' ? 'PSC' : (studentName.charAt(0)||'U');
+  div.className = `msg ${role}`;
+  if (!animate) div.style.animation = 'none';
+  const init = role === 'agent' ? 'PSC' : (studentName.charAt(0) || 'U');
   div.innerHTML = `<div class="msg-av"><span>${init}</span></div><div class="msg-bubble">${fmt(content)}</div>`;
   wrap.appendChild(div);
   wrap.scrollTop = wrap.scrollHeight;
 }
 
-function fmt(t) {
-  return t.replace(/\*\*(.*?)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>');
+function fmt(text) {
+  return String(text).replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
 }
 
 function showTyping() {
   const wrap = document.getElementById('msgs');
   const div = document.createElement('div');
-  div.className='msg agent';div.id='typing';
-  div.innerHTML=`<div class="msg-av"><span>PSC</span></div><div class="msg-bubble"><div class="typing"><div class="td"></div><div class="td"></div><div class="td"></div></div></div>`;
-  wrap.appendChild(div);wrap.scrollTop=wrap.scrollHeight;
+  div.className = 'msg agent';
+  div.id = 'typing';
+  div.innerHTML = `<div class="msg-av"><span>PSC</span></div><div class="msg-bubble"><div class="typing"><div class="td"></div><div class="td"></div><div class="td"></div></div></div>`;
+  wrap.appendChild(div);
+  wrap.scrollTop = wrap.scrollHeight;
 }
 
-function rmTyping(){const t=document.getElementById('typing');if(t)t.remove();}
-
-// ── SEND ─────────────────────────────────────────────────────────
-function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();}}
-function sc(text){document.getElementById('ta').value=text;sendMsg();}
-
-function normalizeMediaType(type){
-  if(!type) return 'image/jpeg';
-  const normalized = type.toLowerCase();
-  if(normalized==='image/jpg') return 'image/jpeg';
-  if(normalized.startsWith('image/')) return normalized;
-  return 'image/jpeg';
+function rmTyping() {
+  const t = document.getElementById('typing');
+  if (t) t.remove();
 }
 
-function cleanBase64(data){
-  if(!data) return '';
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMsg();
+  }
+}
+
+function sc(text) {
+  document.getElementById('ta').value = text;
+  sendMsg();
+}
+
+function cleanBase64(data) {
+  if (!data) return '';
   return data.includes(',') ? data.split(',')[1] : data;
 }
 
 async function sendMsg() {
   const ta = document.getElementById('ta');
   const text = ta.value.trim();
-  if((!text && pendingImgs.length===0)||busy) return;
+  if ((!text && pendingImgs.length === 0) || busy) return;
   const msgText = text || '(shared images for inspiration)';
   const imgsForRequest = [...pendingImgs];
   pendingImgs = [];
 
   addMsg('user', msgText);
-  ta.value='';autoH(ta);
+  ta.value = '';
+  autoH(ta);
   clearThumbs();
-  history.push({role:'user',content:msgText});
-  busy=true;
-  document.getElementById('sendBtn').disabled=true;
+  history.push({ role: 'user', content: msgText });
+  busy = true;
+  document.getElementById('sendBtn').disabled = true;
   setStatus('PSC Agent is building...');
   showTyping();
 
@@ -398,8 +996,8 @@ async function sendMsg() {
     let resp;
     try {
       resp = await callAPI(msgText, imgsForRequest);
-    } catch(primaryErr) {
-      if(imgsForRequest.length>0){
+    } catch (primaryErr) {
+      if (imgsForRequest.length > 0) {
         console.log('Image upload failed, retrying text-only request:', primaryErr);
         resp = await callAPI(msgText, []);
       } else {
@@ -409,337 +1007,465 @@ async function sendMsg() {
 
     rmTyping();
     addMsg('agent', resp.message);
-    history.push({role:'assistant',content:resp.message});
-    if(resp.sections && Object.keys(resp.sections).length>0){
-      Object.assign(sections, resp.sections);
+    history.push({ role: 'assistant', content: resp.message });
+
+    if (resp.sections && Object.keys(resp.sections).length > 0) {
+      const hydrated = hydrateSectionsWithPhotos(resp.sections);
+      Object.assign(sections, hydrated);
       updatePreview();
+      pushVersion('ai-update');
       setStatus('Updated ✓');
-      setTimeout(()=>setStatus('Ready'),2000);
+      setTimeout(() => setStatus('Ready'), 1800);
     }
-    if(resp.siteData) {
+    if (resp.siteData) {
       Object.assign(siteData, resp.siteData);
       updateSlug();
     }
     save();
-  } catch(e) {
-    console.log('sendMsg failed:', e);
+  } catch (err) {
+    console.log('sendMsg failed:', err);
     rmTyping();
-    addMsg('agent','Something went wrong. Please try again.');
+    addMsg('agent', 'Something went wrong. Please try again.');
     setStatus('Error');
   }
-  busy=false;
-  document.getElementById('sendBtn').disabled=false;
+
+  busy = false;
+  document.getElementById('sendBtn').disabled = false;
 }
 
-// ── API CALL ──────────────────────────────────────────────────────
 async function callAPI(msg, imgs) {
-  const messages = [...history.slice(-12)].map(m=>({
-    role: m.role==='assistant'?'assistant':'user',
-    content: m.content
+  const messages = history.slice(-12).map(m => ({
+    role: m.role === 'assistant' ? 'assistant' : 'user',
+    content: m.content,
   }));
 
-  if(imgs.length > 0 && messages.length > 0) {
-    const content = [
-      { type: 'text', text: msg || 'Use these images for inspiration' },
-      ...imgs.map(i=>({
-        type: 'image',
-        source: {
-          type: 'base64',
-          media_type: i.type,
-          data: i.data
-        }
-      }))
-    ];
-    messages[messages.length-1] = {role:'user',content};
+  if (!messages.length || messages[messages.length - 1].role !== 'user' || messages[messages.length - 1].content !== msg) {
+    messages.push({ role: 'user', content: msg });
+  }
+
+  if (imgs.length > 0) {
+    messages[messages.length - 1] = {
+      role: 'user',
+      content: [
+        { type: 'text', text: msg || 'Use these images for inspiration' },
+        ...imgs.map(img => ({
+          type: 'image',
+          source: {
+            type: 'base64',
+            media_type: img.type,
+            data: cleanBase64(img.data),
+          },
+        })),
+      ],
+    };
   }
 
   const res = await fetch(API_ENDPOINT, {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
       messages: messages,
       studentName: studentName,
       siteData: siteData,
-      builtSections: Object.keys(sections).join(', ')
-    })
+      builtSections: sectionOrder.filter(k => sections[k]).join(', '),
+    }),
   });
 
   const data = await res.json().catch(() => ({}));
-  if(!res.ok){
-    throw new Error(data?.error || `API request failed (${res.status})`);
-  }
-  return parseResp(data.content?.[0]?.text||'');
+  if (!res.ok) throw new Error(data?.error || `API request failed (${res.status})`);
+  return parseResp(data.content?.[0]?.text || '');
 }
 
 function parseResp(raw) {
   const safeRaw = typeof raw === 'string' ? raw : '';
-  const m = safeRaw.match(/<response>([\s\S]*?)<\/response>/i);
-  const payload = (m ? m[1] : safeRaw).trim();
+  const match = safeRaw.match(/<response>([\s\S]*?)<\/response>/i);
+  const payload = (match ? match[1] : safeRaw).trim();
 
   let parsed = null;
   try {
     parsed = JSON.parse(payload);
-  } catch(e) {
+  } catch (_) {
     try {
       parsed = Function(`"use strict"; return (${payload});`)();
-    } catch(e2) {
-      console.log('parseResp failed:', e2);
+    } catch (err) {
+      console.log('parseResp failed:', err);
     }
   }
 
-  if(parsed && typeof parsed==='object'){
-    if(parsed.siteData && typeof parsed.siteData==='object'){
-      Object.keys(parsed.siteData).forEach(k=>{
-        if(!parsed.siteData[k]||(Array.isArray(parsed.siteData[k])&&parsed.siteData[k].length===0)) delete parsed.siteData[k];
-      });
-    } else {
-      parsed.siteData = {};
-    }
-    if(!parsed.sections || typeof parsed.sections!=='object') parsed.sections = {};
-    if(typeof parsed.message!=='string' || !parsed.message.trim()){
-      parsed.message = 'Built it — tell me what you want to refine next.';
-    }
+  if (parsed && typeof parsed === 'object') {
+    if (!parsed.sections || typeof parsed.sections !== 'object') parsed.sections = {};
+    if (!parsed.siteData || typeof parsed.siteData !== 'object') parsed.siteData = {};
+    if (!parsed.message || typeof parsed.message !== 'string') parsed.message = 'Built it. Tell me what to refine next.';
     return parsed;
   }
-
-  return {message:safeRaw.replace(/<[^>]+>/g,'').trim()||'I had trouble with that. Try again.',sections:{},siteData:{}};
+  return { message: safeRaw.replace(/<[^>]+>/g, '').trim() || 'I had trouble with that. Try again.', sections: {}, siteData: {} };
 }
 
-// ── PREVIEW ───────────────────────────────────────────────────────
-function updatePreview() {
-  const SECS = ['hero','about','services','gallery','booking','contact'];
-  const html = `<!DOCTYPE html><html><head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:sans-serif;font-weight:300}</style>
-</head><body>${SECS.map(s=>sections[s]||'').join('\n')}</body></html>`;
-  const frame=document.getElementById('pframe');
-  const empty=document.getElementById('prevEmpty');
-  const blob=new Blob([html],{type:'text/html'});
-  frame.src=URL.createObjectURL(blob);
-  frame.style.display='block';
-  empty.style.display='none';
-  resizeFrame();
+function restoreChat() {
+  history.slice(-6).forEach(m => addMsg(m.role === 'user' ? 'user' : 'agent', m.content, false));
+  addMsg('agent', `Welcome back, **${studentName}**! Your website is loaded and ready to edit.`);
 }
 
-function resizeFrame(){
-  const wrap=document.getElementById('prevWrap');
-  const frame=document.getElementById('pframe');
-  if(!wrap.classList.contains('mob')){
-    frame.style.height=(window.innerHeight-112)+'px';
+function showDeploy() {
+  if (Object.keys(sections).length === 0) {
+    addMsg('agent', 'Your website is not ready yet. Tell me about your brand and I will build it immediately.');
+    return;
   }
-}
-window.addEventListener('resize',resizeFrame);
-
-function setDev(mode,btn){
-  document.querySelectorAll('.dev-btn').forEach(b=>b.classList.remove('act'));
-  btn.classList.add('act');
-  const wrap=document.getElementById('prevWrap');
-  const frame=document.getElementById('pframe');
-  if(mode==='mobile'){
-    wrap.classList.add('mob');
-    frame.style.width='390px';frame.style.height='844px';
-  } else {
-    wrap.classList.remove('mob');
-    frame.style.width='100%';frame.style.height=(window.innerHeight-112)+'px';
-  }
-}
-
-function scrollSec(btn){
-  document.querySelectorAll('.stab').forEach(t=>t.classList.remove('act'));
-  btn.classList.add('act');
-  try{document.getElementById('pframe').contentWindow.document.getElementById(btn.dataset.sec)?.scrollIntoView({behavior:'smooth'});}catch(e){}
-}
-
-function setStatus(t){document.getElementById('prevStatus').textContent=t;}
-
-function updateSlug(){
-  const slug=(siteData.bizName||studentName||'yoursite').toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
-  document.getElementById('urlSlug').textContent=slug||'yoursite';
-  document.getElementById('ovUrl').textContent=(slug||'yoursite')+'.pscsites.com';
-}
-
-// ── IMAGES ────────────────────────────────────────────────────────
-function handleImgs(e){
-  Array.from(e.target.files).slice(0,6).forEach(f=>{
-    const r=new FileReader();
-    r.onload=ev=>{
-      const b64=ev.target.result.split(',')[1];
-      pendingImgs.push({data:b64,type:f.type});
-      const thumbs=document.getElementById('thumbs');
-      const wrap=document.createElement('div');wrap.className='thumb-wrap';
-      const img=document.createElement('img');img.src=ev.target.result;img.className='thumb-img';
-      const rm=document.createElement('div');rm.className='thumb-rm';rm.textContent='×';
-      rm.onclick=()=>{const idx=Array.from(thumbs.children).indexOf(wrap);pendingImgs.splice(idx,1);wrap.remove();};
-      wrap.appendChild(img);wrap.appendChild(rm);thumbs.appendChild(wrap);
-    };
-    r.readAsDataURL(f);
-  });
-  e.target.value='';
-}
-function clearThumbs(){document.getElementById('thumbs').innerHTML='';}
-
-// ── DEPLOY ────────────────────────────────────────────────────────
-function showDeploy(){
-  if(Object.keys(sections).length===0){addMsg('agent','Your website is not ready yet. Tell me about your business and I will build it for you first.');return;}
   updateSlug();
   document.getElementById('deployOv').classList.add('show');
 }
-function closeOv(){document.getElementById('deployOv').classList.remove('show');}
-function confirmDeploy(){
-  const btn=document.getElementById('ovMainBtn');
-  btn.textContent='Deploying...';btn.disabled=true;
-  document.getElementById('ovIcon').textContent='◌';
-  document.getElementById('ovTitle').textContent='GOING LIVE';
-  setTimeout(()=>{
-    const slug=document.getElementById('urlSlug').textContent;
-    const url=`https://${slug}.pscsites.com`;
-    document.getElementById('ovIcon').textContent='✦';
-    document.getElementById('ovTitle').textContent='YOUR SITE IS LIVE';
-    document.getElementById('ovSub').textContent='Your website is now live. Share it everywhere.';
-    document.getElementById('ovUrl').textContent=url;
-    btn.textContent='Open My Website →';btn.disabled=false;
-    btn.onclick=()=>window.open(url,'_blank');
-    addMsg('agent',`**Your website is live!**\n\nYou can find it at: ${url}\n\nAdd it to your Instagram bio right now and start sending clients there. What would you like to update next?`);
-    save();
-  },2500);
+
+function closeOv() {
+  document.getElementById('deployOv').classList.remove('show');
 }
 
-// ── INLINE PREVIEW EDITOR ─────────────────────────────────────────
-function inferSectionKey(node){
-  let el = node && node.nodeType===1 ? node : node?.parentElement;
-  while(el){
-    if(el.id && SECTION_ORDER.includes(el.id)) return el.id;
+function confirmDeploy() {
+  const btn = document.getElementById('ovMainBtn');
+  btn.textContent = 'Deploying...';
+  btn.disabled = true;
+  document.getElementById('ovIcon').textContent = '◌';
+  document.getElementById('ovTitle').textContent = 'GOING LIVE';
+  setTimeout(() => {
+    const slug = document.getElementById('urlSlug').textContent;
+    const url = `https://${slug}.pscsites.com`;
+    document.getElementById('ovIcon').textContent = '✦';
+    document.getElementById('ovTitle').textContent = 'YOUR SITE IS LIVE';
+    document.getElementById('ovSub').textContent = 'Your website is now live. Share it everywhere.';
+    document.getElementById('ovUrl').textContent = url;
+    document.getElementById('domainPanel').style.display = 'block';
+    btn.textContent = 'Open My Website →';
+    btn.disabled = false;
+    btn.onclick = () => window.open(url, '_blank');
+    addMsg('agent', `**Your website is live!**\n\nYou can find it at: ${url}\n\nWant any refinements? I can update instantly.`);
+    save();
+  }, 2400);
+}
+
+function createShareLink() {
+  if (!Object.keys(sections).length) {
+    showToast('Build something first');
+    return;
+  }
+  const id = nowId();
+  const html = buildCompleteSiteHtml();
+  localStorage.setItem(`psc_share_${id}`, JSON.stringify({ html, createdAt: Date.now() }));
+  const url = `${SHARE_BASE_URL}/preview/${id}`;
+  document.getElementById('shareLinkInput').value = url;
+  togglePanel('sharePanel');
+  showToast('Share link created');
+}
+
+function copyShareLink() {
+  const input = document.getElementById('shareLinkInput');
+  if (!input.value) return;
+  navigator.clipboard?.writeText(input.value).then(() => showToast('Link copied')).catch(() => showToast('Copy failed'));
+}
+
+async function downloadWebsiteZip() {
+  if (!window.JSZip) {
+    showToast('JSZip not loaded');
+    return;
+  }
+  const zip = new window.JSZip();
+  zip.file('index.html', buildCompleteSiteHtml());
+  zip.file('README.txt', [
+    'PSC Agent Website Export',
+    '',
+    '1. Upload index.html to any static host (Netlify, Vercel, GitHub Pages).',
+    '2. Ensure your custom domain points to that host.',
+    '3. All photos are already embedded as base64 in the HTML.',
+    '',
+    'Generated by PSC Agent.',
+  ].join('\n'));
+
+  const blob = await zip.generateAsync({ type: 'blob' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${(siteData.bizName || 'psc-site').toLowerCase().replace(/\s+/g, '-')}.zip`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+function inferSectionKey(node) {
+  let el = node && node.nodeType === 1 ? node : node?.parentElement;
+  while (el) {
+    if (el.id && SECTION_DEFAULT_ORDER.includes(el.id)) return el.id;
     el = el.parentElement;
   }
   return null;
 }
 
-function persistPreviewEdits(){
-  const frame = document.getElementById('pframe');
-  const doc = frame.contentDocument;
-  if(!doc || !doc.body) return;
-  const nextSections = {};
-  SECTION_ORDER.forEach(id=>{
-    const sec = doc.getElementById(id);
-    if(sec) nextSections[id] = sec.outerHTML;
-  });
-  if(Object.keys(nextSections).length>0){
-    sections = {...sections, ...nextSections};
-    save();
-  }
+function persistPreviewEdits() {
+  clearTimeout(previewSaveTimer);
+  previewSaveTimer = setTimeout(() => {
+    const frame = document.getElementById('pframe');
+    const doc = frame.contentDocument;
+    if (!doc || !doc.body) return;
+    const next = {};
+    sectionOrder.forEach(id => {
+      const sec = doc.getElementById(id);
+      if (sec) next[id] = sec.outerHTML;
+    });
+    if (Object.keys(next).length) {
+      sections = { ...sections, ...next };
+      save();
+      scheduleVersion('inline-edit');
+    }
+  }, 250);
 }
 
-function hideToolbar(){
+function hideToolbar() {
   const toolbar = document.getElementById('editToolbar');
   toolbar.classList.remove('show');
 }
 
-function showToolbarAtSelection(){
+function showToolbarAtSelection() {
   const frame = document.getElementById('pframe');
   const doc = frame.contentDocument;
   const toolbar = document.getElementById('editToolbar');
-  if(!doc || !toolbar) return;
+  if (!doc || !toolbar) return;
   const sel = doc.getSelection();
-  if(!sel || sel.rangeCount===0 || sel.isCollapsed){
+  if (!sel || sel.rangeCount === 0 || sel.isCollapsed) {
     hideToolbar();
     return;
   }
   const range = sel.getRangeAt(0);
   const rect = range.getBoundingClientRect();
-  if(!rect || (rect.width===0 && rect.height===0)){
+  if (!rect || (!rect.width && !rect.height)) {
     hideToolbar();
     return;
   }
   const frameRect = frame.getBoundingClientRect();
-  const top = frameRect.top + rect.top - 44;
-  const left = frameRect.left + rect.left + (rect.width/2);
-  toolbar.style.top = `${Math.max(10, top)}px`;
-  toolbar.style.left = `${Math.max(10, left)}px`;
+  toolbar.style.top = `${Math.max(8, frameRect.top + rect.top - 44)}px`;
+  toolbar.style.left = `${Math.max(8, frameRect.left + rect.left + rect.width / 2)}px`;
   toolbar.style.transform = 'translateX(-50%)';
   toolbar.classList.add('show');
 }
 
-function adjustSelectionFontSize(deltaPx){
+function adjustSelectionFontSize(deltaPx) {
   const frame = document.getElementById('pframe');
   const doc = frame.contentDocument;
   const sel = doc?.getSelection();
-  if(!doc || !sel || sel.rangeCount===0) return;
+  if (!doc || !sel || sel.rangeCount === 0) return;
   const range = sel.getRangeAt(0);
-  const parent = range.commonAncestorContainer.nodeType===1
+  const parent = range.commonAncestorContainer.nodeType === 1
     ? range.commonAncestorContainer
     : range.commonAncestorContainer.parentElement;
-  const win = frame.contentWindow;
-  const computed = parent ? win.getComputedStyle(parent).fontSize : '16px';
-  const current = Number.parseFloat(computed) || 16;
-  const next = Math.max(10, Math.min(72, current + deltaPx));
+  const computed = parent ? frame.contentWindow.getComputedStyle(parent).fontSize : '16px';
+  const next = Math.max(10, Math.min(72, (parseFloat(computed) || 16) + deltaPx));
   doc.execCommand('fontSize', false, 7);
-  const fonts = doc.querySelectorAll('font[size="7"]');
-  fonts.forEach(f=>{
-    f.removeAttribute('size');
-    f.style.fontSize = `${next}px`;
+  doc.querySelectorAll('font[size="7"]').forEach(node => {
+    node.removeAttribute('size');
+    node.style.fontSize = `${next}px`;
   });
 }
 
-function toolbarAction(action){
+function toolbarAction(action, value) {
   const frame = document.getElementById('pframe');
   const doc = frame.contentDocument;
-  if(!doc) return;
+  if (!doc) return;
   frame.contentWindow.focus();
-  if(action==='bold') doc.execCommand('bold');
-  if(action==='italic') doc.execCommand('italic');
-  if(action==='sizeUp') adjustSelectionFontSize(2);
-  if(action==='sizeDown') adjustSelectionFontSize(-2);
+  if (action === 'bold') doc.execCommand('bold');
+  if (action === 'italic') doc.execCommand('italic');
+  if (action === 'sizeUp') adjustSelectionFontSize(2);
+  if (action === 'sizeDown') adjustSelectionFontSize(-2);
+  if (action === 'color') {
+    doc.execCommand('styleWithCSS', false, true);
+    doc.execCommand('foreColor', false, value || '#111111');
+  }
   persistPreviewEdits();
   showToolbarAtSelection();
 }
 
-function makeFrameTextEditable(doc){
-  const editableTags = ['p','h1','h2','h3','h4','h5','h6','span','a','li','small','label','blockquote'];
-  editableTags.forEach(tag=>{
-    doc.querySelectorAll(tag).forEach(el=>{
-      if(el.closest('[contenteditable="true"]')) return;
-      if(!el.textContent || !el.textContent.trim()) return;
-      el.setAttribute('contenteditable','true');
-      el.setAttribute('spellcheck','true');
-      el.style.cursor = 'text';
-      el.addEventListener('blur', persistPreviewEdits);
-      el.addEventListener('input', persistPreviewEdits);
+function injectEditorScript(doc) {
+  if (!doc || doc.__pscScriptInjected) return;
+  doc.__pscScriptInjected = true;
+  const script = doc.createElement('script');
+  script.textContent = `(function(){
+    if(window.__pscInlineEditorReady) return;
+    window.__pscInlineEditorReady = true;
+    const selector = 'h1,h2,h3,p,span';
+    document.addEventListener('dblclick', function(e){
+      const target = e.target && e.target.closest(selector);
+      if(!target) return;
+      target.setAttribute('contenteditable','true');
+      target.setAttribute('spellcheck','true');
+      target.focus();
     });
-  });
+    document.addEventListener('focusout', function(e){
+      const t = e.target;
+      if(t && t.matches && t.matches(selector+'[contenteditable="true"]')){
+        t.removeAttribute('contenteditable');
+        document.dispatchEvent(new CustomEvent('psc-inline-edit-blur'));
+      }
+    });
+  })();`;
+  doc.body.appendChild(script);
 }
 
-function attachPreviewEditor(){
+function attachPreviewEditor() {
   const frame = document.getElementById('pframe');
   const doc = frame.contentDocument;
-  if(!doc || doc.__pscEditorAttached) return;
+  if (!doc || doc.__pscEditorAttached) return;
   doc.__pscEditorAttached = true;
-  makeFrameTextEditable(doc);
+  injectEditorScript(doc);
 
+  doc.addEventListener('psc-inline-edit-blur', persistPreviewEdits);
   doc.addEventListener('selectionchange', showToolbarAtSelection);
-  doc.addEventListener('click', (e)=>{
-    const sec = inferSectionKey(e.target);
-    if(!sec){
-      hideToolbar();
-      return;
-    }
-    makeFrameTextEditable(doc);
-  });
+  doc.addEventListener('mouseup', () => setTimeout(showToolbarAtSelection, 0));
   doc.addEventListener('keyup', showToolbarAtSelection);
-  doc.addEventListener('mousedown', () => setTimeout(showToolbarAtSelection, 0));
+  doc.addEventListener('input', () => persistPreviewEdits());
+  doc.addEventListener('click', e => {
+    if (!inferSectionKey(e.target)) hideToolbar();
+  });
 }
 
-// ── UTILITY ───────────────────────────────────────────────────────
-function autoH(ta){ta.style.height='auto';ta.style.height=Math.min(ta.scrollHeight,110)+'px';}
-function newSite(){if(!confirm('Start a new website? Your current site is saved.'))return;sections={};siteData={};history=[];document.getElementById('msgs').innerHTML='';document.getElementById('pframe').style.display='none';document.getElementById('prevEmpty').style.display='flex';updateSlug();setTimeout(()=>addMsg('agent',`Let\'s build something new, **${studentName}**. Tell me anything and I\'ll build immediately.`),300);}
-function showToast(t){const el=document.getElementById('toast');el.textContent=t;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),1500);}
-document.getElementById('pframe').addEventListener('load', attachPreviewEditor);
-document.addEventListener('click',(e)=>{
-  const toolbar=document.getElementById('editToolbar');
-  const frame=document.getElementById('pframe');
-  if(!toolbar.contains(e.target) && e.target!==frame){
-    hideToolbar();
+function toggleMobileView() {
+  if (window.innerWidth > 768) return;
+  if (document.body.classList.contains('mobile-chat-only')) {
+    document.body.classList.remove('mobile-chat-only');
+    document.body.classList.add('mobile-preview-only');
+  } else {
+    document.body.classList.remove('mobile-preview-only');
+    document.body.classList.add('mobile-chat-only');
   }
+  updateMobileToggleLabel();
+}
+
+function updateMobileToggleLabel() {
+  const btn = document.getElementById('mobileViewToggle');
+  if (!btn) return;
+  if (window.innerWidth > 768) {
+    btn.style.display = 'none';
+    document.body.classList.remove('mobile-chat-only', 'mobile-preview-only');
+    return;
+  }
+  btn.style.display = 'block';
+  if (!document.body.classList.contains('mobile-chat-only') && !document.body.classList.contains('mobile-preview-only')) {
+    document.body.classList.add('mobile-preview-only');
+  }
+  btn.textContent = document.body.classList.contains('mobile-chat-only') ? 'Show Preview' : 'Show Chat';
+}
+
+function maybeRenderSharePreviewRoute() {
+  if (!IS_PREVIEW_ROUTE) return false;
+  const shareId = PREVIEW_MATCH[1];
+  const raw = localStorage.getItem(`psc_share_${shareId}`);
+  const payload = raw ? safeJsonParse(raw, { html: raw }) : null;
+  const html = payload?.html || '';
+
+  document.getElementById('login').style.display = 'none';
+  document.getElementById('app').style.display = 'none';
+  document.querySelectorAll('.tool-panel,.overlay,.toast,.edit-toolbar,.mobile-view-toggle').forEach(el => { el.style.display = 'none'; });
+
+  const container = document.createElement('div');
+  container.style.position = 'fixed';
+  container.style.inset = '0';
+  container.style.background = '#fff';
+  container.style.zIndex = '9999';
+  if (!html) {
+    container.innerHTML = '<div style="height:100%;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif;color:#444">Preview not found on this browser.</div>';
+  } else {
+    const iframe = document.createElement('iframe');
+    iframe.style.border = 'none';
+    iframe.style.width = '100%';
+    iframe.style.height = '100%';
+    iframe.srcdoc = html;
+    container.appendChild(iframe);
+  }
+  document.body.appendChild(container);
+  return true;
+}
+
+function doLogin() {
+  if (IS_PREVIEW_ROUTE) return;
+  const val = document.getElementById('codeIn').value.trim().toUpperCase();
+  const err = document.getElementById('loginErr');
+  const inp = document.getElementById('codeIn');
+  const valid = val.startsWith('PSC180');
+  if (!valid) {
+    inp.classList.add('shake');
+    err.textContent = 'Invalid access code. Check your 180° Programme welcome email.';
+    setTimeout(() => inp.classList.remove('shake'), 400);
+    return;
+  }
+
+  studentCode = val;
+  studentName = val.includes('-') ? val.split('-').slice(1).join(' ') : 'Student';
+  localStorage.setItem('psc_code', val);
+  localStorage.setItem('psc_name', studentName);
+  loadSaved();
+  document.getElementById('login').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  resizeFrame();
+
+  if (history.length === 0) {
+    setTimeout(() => addMsg('agent', `Welcome to PSC Agent, **${studentName}**.\n\nTell me anything and I will build immediately.`), 400);
+  } else {
+    restoreChat();
+  }
+}
+
+function autoH(ta) {
+  ta.style.height = 'auto';
+  ta.style.height = `${Math.min(ta.scrollHeight, 110)}px`;
+}
+
+function newSite() {
+  if (!confirm('Start a new website? Your current site is saved.')) return;
+  sections = {};
+  siteData = {};
+  history = [];
+  sectionOrder = [...SECTION_DEFAULT_ORDER];
+  activeSectionTab = 'hero';
+  document.getElementById('msgs').innerHTML = '';
+  document.getElementById('pframe').style.display = 'none';
+  document.getElementById('prevEmpty').style.display = 'flex';
+  renderSectionTabs();
+  updateSlug();
+  save();
+  setTimeout(() => addMsg('agent', `Let's build something new, **${studentName}**. Tell me anything and I'll build immediately.`), 250);
+}
+
+function showToast(text) {
+  const el = document.getElementById('toast');
+  el.textContent = text;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 1400);
+}
+
+function initialize() {
+  renderSectionTabs();
+  renderPhotoPanel();
+  renderFontPanel();
+  renderHistoryPanel();
+  syncPaletteInputs();
+  updateMobileToggleLabel();
+
+  if (maybeRenderSharePreviewRoute()) return;
+
+  const code = localStorage.getItem('psc_code');
+  if (code && code.startsWith('PSC180')) {
+    document.getElementById('codeIn').value = code;
+    doLogin();
+  }
+}
+
+document.getElementById('pframe').addEventListener('load', attachPreviewEditor);
+window.addEventListener('resize', () => {
+  resizeFrame();
+  updateMobileToggleLabel();
 });
+document.addEventListener('click', e => {
+  const toolbar = document.getElementById('editToolbar');
+  if (toolbar && !toolbar.contains(e.target)) hideToolbar();
+  const insidePanel = e.target.closest('.tool-panel');
+  const panelButton = e.target.closest('.dev-btn');
+  if (!insidePanel && !panelButton) closePanels();
+});
+initialize();
 </script>
 </body>
 </html>
