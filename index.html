@@ -160,6 +160,7 @@ body{font-family:'Inter',sans-serif;font-weight:300;background:var(--black);colo
 .row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:8px 0}
 .row label{font-size:11px;color:#666}
 .row input[type="color"],.row select{width:120px;height:30px;border:1px solid #ddd;background:#fff}
+.row input[type="range"]{width:120px}
 .font-list{display:grid;gap:6px;max-height:240px;overflow:auto}
 .font-item{border:1px solid #ddd;background:#fafafa;padding:8px;cursor:pointer}
 .font-item:hover{background:#f2f2f2}
@@ -343,6 +344,21 @@ body{font-family:'Inter',sans-serif;font-weight:300;background:var(--black);colo
   <input id="shareLinkInput" class="share-link" readonly>
   <button class="panel-btn" onclick="copyShareLink()">Copy Link</button>
 </div>
+<div class="tool-panel" id="imagePanel">
+  <div class="panel-title">Image Settings</div>
+  <div class="row"><label>Width</label><input id="imgWidthRange" type="range" min="20" max="100" value="100" oninput="onImageResizeChange()"></div>
+  <div class="row"><label>Height</label><input id="imgHeightRange" type="range" min="120" max="900" value="320" oninput="onImageResizeChange()"></div>
+  <div class="row"><label>Fit</label>
+    <select id="imgFitSelect" onchange="onImageResizeChange()">
+      <option value="cover">Cover</option>
+      <option value="contain">Contain</option>
+      <option value="fill">Fill</option>
+    </select>
+  </div>
+  <button class="panel-btn" onclick="triggerInlineImagePick()">Replace Image</button>
+  <button class="panel-btn" style="margin-top:6px;background:#f2f2f2;color:#111;border:1px solid #ddd" onclick="convertImageContainerToCarousel()">Convert to Carousel</button>
+</div>
+<input id="inlineImageInput" type="file" accept="image/*" style="display:none" onchange="onInlineImagePicked(event)">
 <button class="mobile-view-toggle" id="mobileViewToggle" onclick="toggleMobileView()">Show Chat</button>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -389,6 +405,8 @@ let fontPresetKey = 'editorial';
 let previewSaveTimer = null;
 let draggedSection = null;
 let versionDebounceTimer = null;
+let selectedImageNode = null;
+let selectedImageContainer = null;
 
 function nowId() {
   return `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -739,6 +757,170 @@ function hydrateSectionsWithPhotos(sectionPatch) {
   return next;
 }
 
+function isImageContainerCandidate(node) {
+  if (!node || node.nodeType !== 1) return false;
+  const tag = node.tagName.toLowerCase();
+  if (tag === 'img' || tag === 'figure') return true;
+  if (node.matches('[data-photo-slot],.photo-placeholder,.image-placeholder,.img-placeholder')) return true;
+  const cls = node.className || '';
+  return /image|photo|gallery|carousel/i.test(String(cls));
+}
+
+function findImageTargetFromNode(node) {
+  let el = node && node.nodeType === 1 ? node : node?.parentElement;
+  while (el && el.tagName && el.tagName.toLowerCase() !== 'body') {
+    if (isImageContainerCandidate(el)) return el;
+    if (el.querySelector && el.querySelector('img')) return el;
+    el = el.parentElement;
+  }
+  return null;
+}
+
+function ensureImageElementForContainer(container) {
+  if (!container) return null;
+  if (container.tagName.toLowerCase() === 'img') return container;
+  let img = container.querySelector('img');
+  if (!img) {
+    const doc = container.ownerDocument;
+    img = doc.createElement('img');
+    img.alt = 'Uploaded image';
+    img.style.width = '100%';
+    img.style.height = '100%';
+    img.style.objectFit = 'cover';
+    container.innerHTML = '';
+    container.appendChild(img);
+  }
+  return img;
+}
+
+function openImagePanelForTarget(target) {
+  const frame = document.getElementById('pframe');
+  const doc = frame.contentDocument;
+  if (!doc || !target) return;
+  selectedImageContainer = target;
+  selectedImageNode = ensureImageElementForContainer(target);
+  if (!selectedImageNode) return;
+
+  const style = frame.contentWindow.getComputedStyle(selectedImageNode);
+  const widthPx = parseFloat(style.width) || 320;
+  const parentWidth = parseFloat(frame.contentWindow.getComputedStyle(selectedImageNode.parentElement || doc.body).width) || widthPx;
+  const widthPct = Math.max(20, Math.min(100, Math.round((widthPx / parentWidth) * 100)));
+  const heightPx = Math.max(120, Math.min(900, Math.round(parseFloat(style.height) || 320)));
+
+  document.getElementById('imgWidthRange').value = String(widthPct);
+  document.getElementById('imgHeightRange').value = String(heightPx);
+  document.getElementById('imgFitSelect').value = style.objectFit || 'cover';
+  togglePanel('imagePanel');
+}
+
+function onImageResizeChange() {
+  if (!selectedImageNode) return;
+  const widthPct = Number(document.getElementById('imgWidthRange').value || 100);
+  const heightPx = Number(document.getElementById('imgHeightRange').value || 320);
+  const fit = document.getElementById('imgFitSelect').value || 'cover';
+
+  selectedImageNode.style.width = `${widthPct}%`;
+  selectedImageNode.style.height = `${heightPx}px`;
+  selectedImageNode.style.objectFit = fit;
+  if (selectedImageContainer && selectedImageContainer !== selectedImageNode) {
+    selectedImageContainer.style.minHeight = `${heightPx}px`;
+  }
+  persistPreviewEdits();
+  scheduleVersion('image-resize');
+}
+
+function triggerInlineImagePick() {
+  const input = document.getElementById('inlineImageInput');
+  if (!input) return;
+  input.click();
+}
+
+function onInlineImagePicked(e) {
+  const file = e.target.files?.[0];
+  if (!file || !selectedImageNode) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const base64 = String(ev.target.result).split(',')[1] || '';
+    const dataUri = `data:${file.type || 'image/jpeg'};base64,${base64}`;
+    selectedImageNode.src = dataUri;
+    selectedImageNode.style.width = `${document.getElementById('imgWidthRange').value || 100}%`;
+    selectedImageNode.style.height = `${document.getElementById('imgHeightRange').value || 320}px`;
+    selectedImageNode.style.objectFit = document.getElementById('imgFitSelect').value || 'cover';
+    const slot = selectedImageNode.getAttribute('data-photo-slot') || selectedImageContainer?.getAttribute('data-photo-slot');
+    if (slot) {
+      persistPhoto(slot, { type: file.type || 'image/jpeg', data: base64 });
+      renderPhotoPanel();
+    }
+    persistPreviewEdits();
+    scheduleVersion('image-replace');
+    showToast('Image updated');
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+
+function getSectionPhotoSources(sectionKey) {
+  const slots = photoSlotsForSection(sectionKey);
+  const sources = [];
+  slots.forEach(slot => {
+    const uri = photoDataUri(slot);
+    if (uri) sources.push(uri);
+  });
+  return sources;
+}
+
+function convertImageContainerToCarousel() {
+  const frame = document.getElementById('pframe');
+  const doc = frame.contentDocument;
+  if (!doc || !selectedImageContainer) return;
+
+  const sectionKey = inferSectionKey(selectedImageContainer) || 'gallery';
+  const baseSources = [];
+  const existing = selectedImageContainer.querySelectorAll ? Array.from(selectedImageContainer.querySelectorAll('img')) : [];
+  existing.forEach(img => {
+    if (img.src) baseSources.push(img.src);
+  });
+  if (!baseSources.length && selectedImageNode?.src) baseSources.push(selectedImageNode.src);
+
+  const slotSources = getSectionPhotoSources(sectionKey);
+  const sources = [...new Set([...baseSources, ...slotSources])].slice(0, 6);
+  if (!sources.length) {
+    showToast('Add at least one image first');
+    return;
+  }
+
+  const root = doc.createElement('div');
+  root.className = 'psc-carousel';
+  root.setAttribute('data-carousel', '');
+  root.setAttribute('data-autoplay', '0');
+  root.style.minHeight = `${Math.max(160, Number(document.getElementById('imgHeightRange').value || 320))}px`;
+
+  const track = doc.createElement('div');
+  track.className = 'psc-carousel-track';
+
+  sources.forEach((src, idx) => {
+    const slide = doc.createElement('div');
+    slide.className = 'psc-slide';
+    const img = doc.createElement('img');
+    img.src = src;
+    img.alt = `${sectionKey} slide ${idx + 1}`;
+    img.style.width = '100%';
+    img.style.height = '100%';
+    img.style.objectFit = document.getElementById('imgFitSelect').value || 'cover';
+    slide.appendChild(img);
+    track.appendChild(slide);
+  });
+
+  root.appendChild(track);
+  selectedImageContainer.replaceWith(root);
+  selectedImageContainer = root;
+  selectedImageNode = root.querySelector('img');
+  persistPreviewEdits();
+  scheduleVersion('carousel');
+  setTimeout(() => attachPreviewEditor(), 0);
+  showToast('Carousel created');
+}
+
 function getActiveFontPreset() {
   return FONT_PRESETS[fontPresetKey] || FONT_PRESETS.editorial;
 }
@@ -762,6 +944,9 @@ function buildCompleteSiteHtml() {
     --accent:${palette.accent};
     --font-heading:${preset.heading};
     --font-body:${preset.body};
+    --motion-fast:220ms;
+    --motion-base:360ms;
+    --motion-ease:cubic-bezier(0.22, 0.61, 0.36, 1);
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
@@ -771,15 +956,150 @@ function buildCompleteSiteHtml() {
     font-family:var(--font-body),sans-serif;
     line-height:1.7;
     -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
   }
   h1,h2,h3,h4,h5,h6{font-family:var(--font-heading),serif;line-height:1.1}
-  a,button,[class*="btn"],[data-psc-accent]{color:var(--accent)}
-  img{max-width:100%;display:block}
-  section{padding:120px 24px}
+  a,button,[class*="btn"],[data-psc-accent]{color:var(--accent);transition:all var(--motion-fast) var(--motion-ease)}
+  img{max-width:100%;display:block;transition:transform var(--motion-base) var(--motion-ease),filter var(--motion-base) var(--motion-ease)}
+  section{padding:120px 24px;position:relative}
+  section > *{transition:all var(--motion-fast) var(--motion-ease)}
+  section img:hover{transform:scale(1.01)}
+
+  .psc-reveal{
+    opacity:0;
+    transform:translateY(20px);
+    transition:opacity 540ms var(--motion-ease),transform 540ms var(--motion-ease);
+    will-change:opacity,transform;
+  }
+  .psc-reveal.is-visible{
+    opacity:1;
+    transform:translateY(0);
+  }
+
+  .psc-carousel,[data-carousel]{
+    position:relative;
+    overflow:hidden;
+    width:100%;
+    min-height:220px;
+  }
+  .psc-carousel-track{
+    display:flex;
+    width:100%;
+    transition:transform 620ms var(--motion-ease);
+    will-change:transform;
+  }
+  .psc-slide,[data-slide]{
+    flex:0 0 100%;
+    min-width:100%;
+  }
+  .psc-prev,.psc-next{
+    position:absolute;
+    top:50%;
+    transform:translateY(-50%);
+    border:none;
+    background:rgba(0,0,0,0.45);
+    color:#fff;
+    width:34px;
+    height:34px;
+    border-radius:999px;
+    cursor:pointer;
+    z-index:5;
+    transition:background var(--motion-fast) var(--motion-ease);
+  }
+  .psc-prev:hover,.psc-next:hover{background:rgba(0,0,0,0.7)}
+  .psc-prev{left:10px}
+  .psc-next{right:10px}
   @media(max-width:768px){section{padding:80px 20px}}
 </style>
 </head>
-<body>${orderedSections}</body>
+<body>${orderedSections}
+<script>
+(function(){
+  function initReveal(){
+    const nodes = Array.from(document.querySelectorAll('[data-reveal], section > *'));
+    if(!nodes.length || !('IntersectionObserver' in window)){
+      nodes.forEach(n=>n.classList.add('is-visible'));
+      return;
+    }
+    nodes.forEach(node=>node.classList.add('psc-reveal'));
+    const io = new IntersectionObserver(entries=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting){
+          entry.target.classList.add('is-visible');
+          io.unobserve(entry.target);
+        }
+      });
+    },{threshold:0.12,rootMargin:'0px 0px -8% 0px'});
+    nodes.forEach(node=>io.observe(node));
+  }
+
+  function initCarousels(){
+    const roots = Array.from(document.querySelectorAll('.psc-carousel,[data-carousel]'));
+    roots.forEach(root=>{
+      let slides = Array.from(root.querySelectorAll('.psc-slide,[data-slide]'));
+      if(!slides.length) return;
+
+      let track = root.querySelector('.psc-carousel-track');
+      if(!track){
+        track = document.createElement('div');
+        track.className = 'psc-carousel-track';
+        slides.forEach(slide=>track.appendChild(slide));
+        root.appendChild(track);
+      }
+      slides = Array.from(track.children);
+      slides.forEach(slide=>slide.classList.add('psc-slide'));
+
+      let index = 0;
+      const render = () => {
+        track.style.transform = 'translateX(' + (-index * 100) + '%)';
+      };
+      const next = () => {
+        index = (index + 1) % slides.length;
+        render();
+      };
+      const prev = () => {
+        index = (index - 1 + slides.length) % slides.length;
+        render();
+      };
+
+      let prevBtn = root.querySelector('.psc-prev');
+      let nextBtn = root.querySelector('.psc-next');
+      if(!prevBtn){
+        prevBtn = document.createElement('button');
+        prevBtn.className = 'psc-prev';
+        prevBtn.type = 'button';
+        prevBtn.textContent = '‹';
+        root.appendChild(prevBtn);
+      }
+      if(!nextBtn){
+        nextBtn = document.createElement('button');
+        nextBtn.className = 'psc-next';
+        nextBtn.type = 'button';
+        nextBtn.textContent = '›';
+        root.appendChild(nextBtn);
+      }
+      prevBtn.addEventListener('click', prev);
+      nextBtn.addEventListener('click', next);
+
+      const autoplayMs = Number(root.getAttribute('data-autoplay') || 0);
+      if(autoplayMs >= 2000){
+        let timer = setInterval(next, autoplayMs);
+        root.addEventListener('mouseenter', ()=>clearInterval(timer));
+        root.addEventListener('mouseleave', ()=>{timer = setInterval(next, autoplayMs);});
+      }
+      render();
+    });
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', function(){initReveal(); initCarousels();});
+  } else {
+    initReveal();
+    initCarousels();
+  }
+})();
+<\/script>
+</body>
 </html>`;
 }
 
@@ -1012,6 +1332,7 @@ async function sendMsg() {
     if (resp.sections && Object.keys(resp.sections).length > 0) {
       const hydrated = hydrateSectionsWithPhotos(resp.sections);
       Object.assign(sections, hydrated);
+      maybeHandleCarouselInstruction(msgText, Object.keys(resp.sections));
       updatePreview();
       pushVersion('ai-update');
       setStatus('Updated ✓');
@@ -1099,6 +1420,65 @@ function parseResp(raw) {
     return parsed;
   }
   return { message: safeRaw.replace(/<[^>]+>/g, '').trim() || 'I had trouble with that. Try again.', sections: {}, siteData: {} };
+}
+
+function convertSectionHtmlToCarousel(sectionKey, html) {
+  if (!html) return html;
+  const template = document.createElement('template');
+  template.innerHTML = html.trim();
+  const root = template.content.firstElementChild;
+  if (!root) return html;
+
+  let target = root.querySelector('.psc-carousel,[data-carousel]');
+  if (target) return html;
+  target = root.querySelector('img,.photo-placeholder,.image-placeholder,.img-placeholder,[class*="image"],[class*="photo"],figure,div');
+  if (!target) return html;
+
+  const existingSources = Array.from(root.querySelectorAll('img')).map(img => img.src).filter(Boolean);
+  const slotSources = getSectionPhotoSources(sectionKey);
+  const sources = [...new Set([...existingSources, ...slotSources])].slice(0, 6);
+  if (!sources.length) return html;
+
+  const doc = root.ownerDocument;
+  const carousel = doc.createElement('div');
+  carousel.className = 'psc-carousel';
+  carousel.setAttribute('data-carousel', '');
+  carousel.setAttribute('data-autoplay', '0');
+  const track = doc.createElement('div');
+  track.className = 'psc-carousel-track';
+
+  sources.forEach((src, idx) => {
+    const slide = doc.createElement('div');
+    slide.className = 'psc-slide';
+    const img = doc.createElement('img');
+    img.src = src;
+    img.alt = `${sectionKey} slide ${idx + 1}`;
+    img.style.width = '100%';
+    img.style.height = '100%';
+    img.style.objectFit = 'cover';
+    slide.appendChild(img);
+    track.appendChild(slide);
+  });
+  carousel.appendChild(track);
+  target.replaceWith(carousel);
+  return root.outerHTML;
+}
+
+function maybeHandleCarouselInstruction(userText, changedSections) {
+  if (!/carousel|slider|slideshow/i.test(String(userText || ''))) return;
+  const candidates = Array.isArray(changedSections) && changedSections.length ? changedSections : sectionOrder;
+  let updated = false;
+  candidates.forEach(sec => {
+    if (!sections[sec]) return;
+    const converted = convertSectionHtmlToCarousel(sec, sections[sec]);
+    if (converted !== sections[sec]) {
+      sections[sec] = converted;
+      updated = true;
+    }
+  });
+  if (updated) {
+    showToast('Carousel added');
+  }
 }
 
 function restoreChat() {
@@ -1318,7 +1698,15 @@ function attachPreviewEditor() {
   doc.addEventListener('keyup', showToolbarAtSelection);
   doc.addEventListener('input', () => persistPreviewEdits());
   doc.addEventListener('click', e => {
-    if (!inferSectionKey(e.target)) hideToolbar();
+    const section = inferSectionKey(e.target);
+    if (!section) {
+      hideToolbar();
+      return;
+    }
+    const imageTarget = findImageTargetFromNode(e.target);
+    if (imageTarget) {
+      openImagePanelForTarget(imageTarget);
+    }
   });
 }
 
