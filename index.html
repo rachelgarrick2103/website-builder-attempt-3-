@@ -133,6 +133,10 @@ body{font-family:'Inter',sans-serif;font-weight:300;background:var(--black);colo
 /* Toast */
 .toast{position:fixed;bottom:20px;right:20px;background:var(--black);color:var(--white);font-size:9px;letter-spacing:0.12em;padding:8px 14px;opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:500}
 .toast.show{opacity:1}
+.edit-toolbar{position:fixed;display:none;align-items:center;gap:6px;background:var(--black);border:1px solid rgba(255,255,255,0.2);padding:6px 8px;z-index:1200;box-shadow:0 8px 20px rgba(0,0,0,0.25)}
+.edit-toolbar.show{display:flex}
+.edit-btn{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:var(--white);font-size:10px;line-height:1;padding:6px 8px;cursor:pointer;min-width:30px}
+.edit-btn:hover{background:rgba(255,255,255,0.18)}
 </style>
 </head>
 <body>
@@ -246,11 +250,18 @@ body{font-family:'Inter',sans-serif;font-weight:300;background:var(--black);colo
 </div>
 
 <div class="toast" id="toast">Saved</div>
+<div class="edit-toolbar" id="editToolbar">
+  <button class="edit-btn" onclick="toolbarAction('bold')"><b>B</b></button>
+  <button class="edit-btn" onclick="toolbarAction('italic')"><i>I</i></button>
+  <button class="edit-btn" onclick="toolbarAction('sizeUp')">A+</button>
+  <button class="edit-btn" onclick="toolbarAction('sizeDown')">A-</button>
+</div>
 
 <script>
 // ── CONFIG ──────────────────────────────────────────────────────
 const API_ENDPOINT = '/api/chat'; // Vercel serverless function
 const ACCESS_PW = 'PSC180'; // Accepts PSC180-ANYTHING
+const SECTION_ORDER = ['hero','about','services','gallery','booking','contact'];
 
 // ── STATE ───────────────────────────────────────────────────────
 let studentName = '';
@@ -260,6 +271,7 @@ let history = [];
 let pendingImgs = [];
 let busy = false;
 let siteData = {};
+let previewSaveTimer = null;
 
 // ── LOGIN ────────────────────────────────────────────────────────
 function doLogin() {
@@ -278,7 +290,7 @@ function doLogin() {
     resizeFrame();
     if (history.length === 0) {
       setTimeout(() => {
-        addMsg('agent', `Welcome to PSC Agent, **${studentName}**.\n\nI am going to build your lash business website right now — through conversation.\n\nLet's start simple: **what is your business name?**`);
+        addMsg('agent', `Welcome to PSC Agent, **${studentName}**.\n\nTell me anything about your lash brand and I will build immediately.`);
       }, 500);
     } else {
       restoreChat();
@@ -352,11 +364,27 @@ function rmTyping(){const t=document.getElementById('typing');if(t)t.remove();}
 function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();}}
 function sc(text){document.getElementById('ta').value=text;sendMsg();}
 
+function normalizeMediaType(type){
+  if(!type) return 'image/jpeg';
+  const normalized = type.toLowerCase();
+  if(normalized==='image/jpg') return 'image/jpeg';
+  if(normalized.startsWith('image/')) return normalized;
+  return 'image/jpeg';
+}
+
+function cleanBase64(data){
+  if(!data) return '';
+  return data.includes(',') ? data.split(',')[1] : data;
+}
+
 async function sendMsg() {
   const ta = document.getElementById('ta');
   const text = ta.value.trim();
   if((!text && pendingImgs.length===0)||busy) return;
   const msgText = text || '(shared images for inspiration)';
+  const imgsForRequest = [...pendingImgs];
+  pendingImgs = [];
+
   addMsg('user', msgText);
   ta.value='';autoH(ta);
   clearThumbs();
@@ -367,8 +395,18 @@ async function sendMsg() {
   showTyping();
 
   try {
-    const resp = await callAPI(msgText, pendingImgs);
-    pendingImgs=[];
+    let resp;
+    try {
+      resp = await callAPI(msgText, imgsForRequest);
+    } catch(primaryErr) {
+      if(imgsForRequest.length>0){
+        console.log('Image upload failed, retrying text-only request:', primaryErr);
+        resp = await callAPI(msgText, []);
+      } else {
+        throw primaryErr;
+      }
+    }
+
     rmTyping();
     addMsg('agent', resp.message);
     history.push({role:'assistant',content:resp.message});
@@ -384,6 +422,7 @@ async function sendMsg() {
     }
     save();
   } catch(e) {
+    console.log('sendMsg failed:', e);
     rmTyping();
     addMsg('agent','Something went wrong. Please try again.');
     setStatus('Error');
@@ -395,89 +434,24 @@ async function sendMsg() {
 // ── API CALL ──────────────────────────────────────────────────────
 async function callAPI(msg, imgs) {
   const messages = [...history.slice(-12)].map(m=>({
-    role: m.role==='agent'?'assistant':'user',
+    role: m.role==='assistant'?'assistant':'user',
     content: m.content
   }));
 
-  // Add images to last message if any
-  if(imgs.length > 0) {
+  if(imgs.length > 0 && messages.length > 0) {
     const content = [
       {type:'text',text:msg||'Use these images for inspiration'},
-      ...imgs.map(i=>({type:'image',source:{type:'base64',media_type:i.type,data:i.data}}))
+      ...imgs.map(i=>({
+        type:'image',
+        source:{
+          type:'base64',
+          media_type:normalizeMediaType(i.type),
+          data:cleanBase64(i.data)
+        }
+      }))
     ];
     messages[messages.length-1] = {role:'user',content};
   }
-
-  const sysPrompt = `You are PSC Agent — the AI website builder for PSC Lash Academy's 180 Degree Programme. You build beautiful professional lash business websites through natural conversation.
-
-IDENTITY: Never mention Claude, AI, Anthropic, or any tool. You are PSC Agent only.
-
-STUDENT INFO:
-Name: ${studentName}
-Current site data: ${JSON.stringify(siteData)}
-Sections already built: ${Object.keys(sections).join(', ')||'none yet'}
-
-YOUR APPROACH:
-- Warm, direct, expert
-- Ask about their vision — colours, mood, aesthetic
-- Build sections immediately when you have enough info
-- Never make them wait — start building the hero as soon as you know their business name
-- Students have complete creative freedom — any colours, any style
-
-WHEN BUILDING:
-Make websites that are genuinely beautiful and specific to each student.
-Ask about: colours, fonts, mood (bold/soft/minimal/luxury/colourful), inspiration websites they love.
-
-HTML RULES:
-- Mobile responsive — works on 390px width
-- Load Google Fonts inline in each section's style tag
-- Use web-safe Google Fonts matching their aesthetic:
-  Bold: Bebas Neue, Anton, Oswald
-  Elegant: Playfair Display, Cormorant Garamond, DM Serif Display
-  Modern: DM Sans, Plus Jakarta Sans, Outfit
-  Soft: Lora, Raleway, Nunito
-- Each section must have id attribute: id="hero" id="about" etc
-- CSS placeholders for images with instructions "Replace with your photo"
-- No broken layouts
-
-SECTION GUIDES:
-Hero: Full viewport. Strong headline. Positioning statement. CTA button to book. Visual impact.
-About: Personal story. Why they are different. Warm and specific.
-Services: Clean list with prices. Easy to scan. Book CTA.
-Gallery: 6-slot grid. Clean squares. Space for their work photos.
-Booking: Embed their booking link or large CTA button. Zero friction.
-Contact: Location, Instagram, email. Simple.
-
-RESPONSE FORMAT — always return JSON inside <response> tags:
-<response>
-{
-  "message": "your conversational response to the student",
-  "siteData": {
-    "bizName": "if mentioned in this message",
-    "ownerName": "if mentioned",
-    "location": "if mentioned",
-    "services": [],
-    "instagram": "if mentioned",
-    "bookingLink": "if mentioned",
-    "brandColours": "if discussed",
-    "style": "if decided"
-  },
-  "sections": {
-    "hero": "complete HTML for hero section — ONLY include if building or updating this section",
-    "about": "complete HTML — ONLY if building/updating",
-    "services": "complete HTML — ONLY if building/updating",
-    "gallery": "complete HTML — ONLY if building/updating",
-    "booking": "complete HTML — ONLY if building/updating",
-    "contact": "complete HTML — ONLY if building/updating"
-  }
-}
-</response>
-
-IMPORTANT:
-- Only include sections you are actually generating right now
-- Only include siteData fields mentioned in the CURRENT message
-- Build the hero immediately when you know the business name — do not wait
-- Make it beautiful and specific — not generic`;
 
   const res = await fetch(API_ENDPOINT, {
     method:'POST',
@@ -485,27 +459,52 @@ IMPORTANT:
     body:JSON.stringify({
       model:'claude-sonnet-4-20250514',
       max_tokens:8096,
-      system:sysPrompt,
+      studentName,
+      sections,
+      siteData,
       messages
     })
   });
 
-  const data = await res.json();
+  const data = await res.json().catch(() => ({}));
+  if(!res.ok){
+    throw new Error(data?.error || `API request failed (${res.status})`);
+  }
   return parseResp(data.content?.[0]?.text||'');
 }
 
 function parseResp(raw) {
+  const safeRaw = typeof raw === 'string' ? raw : '';
+  const m = safeRaw.match(/<response>([\s\S]*?)<\/response>/i);
+  const payload = (m ? m[1] : safeRaw).trim();
+
+  let parsed = null;
   try {
-    const m = raw.match(/<response>([\s\S]*?)<\/response>/);
-    if(m){
-      const p=JSON.parse(m[1].trim());
-      if(p.siteData) Object.keys(p.siteData).forEach(k=>{
-        if(!p.siteData[k]||(Array.isArray(p.siteData[k])&&p.siteData[k].length===0)) delete p.siteData[k];
-      });
-      return p;
+    parsed = JSON.parse(payload);
+  } catch(e) {
+    try {
+      parsed = Function(`"use strict"; return (${payload});`)();
+    } catch(e2) {
+      console.log('parseResp failed:', e2);
     }
-  } catch(e){}
-  return {message:raw.replace(/<[^>]+>/g,'').trim()||'I had trouble with that. Try again.',sections:{},siteData:{}};
+  }
+
+  if(parsed && typeof parsed==='object'){
+    if(parsed.siteData && typeof parsed.siteData==='object'){
+      Object.keys(parsed.siteData).forEach(k=>{
+        if(!parsed.siteData[k]||(Array.isArray(parsed.siteData[k])&&parsed.siteData[k].length===0)) delete parsed.siteData[k];
+      });
+    } else {
+      parsed.siteData = {};
+    }
+    if(!parsed.sections || typeof parsed.sections!=='object') parsed.sections = {};
+    if(typeof parsed.message!=='string' || !parsed.message.trim()){
+      parsed.message = 'Built it — tell me what you want to refine next.';
+    }
+    return parsed;
+  }
+
+  return {message:safeRaw.replace(/<[^>]+>/g,'').trim()||'I had trouble with that. Try again.',sections:{},siteData:{}};
 }
 
 // ── PREVIEW ───────────────────────────────────────────────────────
@@ -607,10 +606,142 @@ function confirmDeploy(){
   },2500);
 }
 
+// ── INLINE PREVIEW EDITOR ─────────────────────────────────────────
+function inferSectionKey(node){
+  let el = node && node.nodeType===1 ? node : node?.parentElement;
+  while(el){
+    if(el.id && SECTION_ORDER.includes(el.id)) return el.id;
+    el = el.parentElement;
+  }
+  return null;
+}
+
+function persistPreviewEdits(){
+  const frame = document.getElementById('pframe');
+  const doc = frame.contentDocument;
+  if(!doc || !doc.body) return;
+  const nextSections = {};
+  SECTION_ORDER.forEach(id=>{
+    const sec = doc.getElementById(id);
+    if(sec) nextSections[id] = sec.outerHTML;
+  });
+  if(Object.keys(nextSections).length>0){
+    sections = {...sections, ...nextSections};
+    save();
+  }
+}
+
+function hideToolbar(){
+  const toolbar = document.getElementById('editToolbar');
+  toolbar.classList.remove('show');
+}
+
+function showToolbarAtSelection(){
+  const frame = document.getElementById('pframe');
+  const doc = frame.contentDocument;
+  const toolbar = document.getElementById('editToolbar');
+  if(!doc || !toolbar) return;
+  const sel = doc.getSelection();
+  if(!sel || sel.rangeCount===0 || sel.isCollapsed){
+    hideToolbar();
+    return;
+  }
+  const range = sel.getRangeAt(0);
+  const rect = range.getBoundingClientRect();
+  if(!rect || (rect.width===0 && rect.height===0)){
+    hideToolbar();
+    return;
+  }
+  const frameRect = frame.getBoundingClientRect();
+  const top = frameRect.top + rect.top - 44;
+  const left = frameRect.left + rect.left + (rect.width/2);
+  toolbar.style.top = `${Math.max(10, top)}px`;
+  toolbar.style.left = `${Math.max(10, left)}px`;
+  toolbar.style.transform = 'translateX(-50%)';
+  toolbar.classList.add('show');
+}
+
+function adjustSelectionFontSize(deltaPx){
+  const frame = document.getElementById('pframe');
+  const doc = frame.contentDocument;
+  const sel = doc?.getSelection();
+  if(!doc || !sel || sel.rangeCount===0) return;
+  const range = sel.getRangeAt(0);
+  const parent = range.commonAncestorContainer.nodeType===1
+    ? range.commonAncestorContainer
+    : range.commonAncestorContainer.parentElement;
+  const win = frame.contentWindow;
+  const computed = parent ? win.getComputedStyle(parent).fontSize : '16px';
+  const current = Number.parseFloat(computed) || 16;
+  const next = Math.max(10, Math.min(72, current + deltaPx));
+  doc.execCommand('fontSize', false, 7);
+  const fonts = doc.querySelectorAll('font[size="7"]');
+  fonts.forEach(f=>{
+    f.removeAttribute('size');
+    f.style.fontSize = `${next}px`;
+  });
+}
+
+function toolbarAction(action){
+  const frame = document.getElementById('pframe');
+  const doc = frame.contentDocument;
+  if(!doc) return;
+  frame.contentWindow.focus();
+  if(action==='bold') doc.execCommand('bold');
+  if(action==='italic') doc.execCommand('italic');
+  if(action==='sizeUp') adjustSelectionFontSize(2);
+  if(action==='sizeDown') adjustSelectionFontSize(-2);
+  persistPreviewEdits();
+  showToolbarAtSelection();
+}
+
+function makeFrameTextEditable(doc){
+  const editableTags = ['p','h1','h2','h3','h4','h5','h6','span','a','li','small','label','blockquote'];
+  editableTags.forEach(tag=>{
+    doc.querySelectorAll(tag).forEach(el=>{
+      if(el.closest('[contenteditable="true"]')) return;
+      if(!el.textContent || !el.textContent.trim()) return;
+      el.setAttribute('contenteditable','true');
+      el.setAttribute('spellcheck','true');
+      el.style.cursor = 'text';
+      el.addEventListener('blur', persistPreviewEdits);
+      el.addEventListener('input', persistPreviewEdits);
+    });
+  });
+}
+
+function attachPreviewEditor(){
+  const frame = document.getElementById('pframe');
+  const doc = frame.contentDocument;
+  if(!doc || doc.__pscEditorAttached) return;
+  doc.__pscEditorAttached = true;
+  makeFrameTextEditable(doc);
+
+  doc.addEventListener('selectionchange', showToolbarAtSelection);
+  doc.addEventListener('click', (e)=>{
+    const sec = inferSectionKey(e.target);
+    if(!sec){
+      hideToolbar();
+      return;
+    }
+    makeFrameTextEditable(doc);
+  });
+  doc.addEventListener('keyup', showToolbarAtSelection);
+  doc.addEventListener('mousedown', () => setTimeout(showToolbarAtSelection, 0));
+}
+
 // ── UTILITY ───────────────────────────────────────────────────────
 function autoH(ta){ta.style.height='auto';ta.style.height=Math.min(ta.scrollHeight,110)+'px';}
-function newSite(){if(!confirm('Start a new website? Your current site is saved.'))return;sections={};siteData={};history=[];document.getElementById('msgs').innerHTML='';document.getElementById('pframe').style.display='none';document.getElementById('prevEmpty').style.display='flex';updateSlug();setTimeout(()=>addMsg('agent',`Let\'s build something new, **${studentName}**. What is your business name?`),300);}
+function newSite(){if(!confirm('Start a new website? Your current site is saved.'))return;sections={};siteData={};history=[];document.getElementById('msgs').innerHTML='';document.getElementById('pframe').style.display='none';document.getElementById('prevEmpty').style.display='flex';updateSlug();setTimeout(()=>addMsg('agent',`Let\'s build something new, **${studentName}**. Tell me anything and I\'ll build immediately.`),300);}
 function showToast(t){const el=document.getElementById('toast');el.textContent=t;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),1500);}
+document.getElementById('pframe').addEventListener('load', attachPreviewEditor);
+document.addEventListener('click',(e)=>{
+  const toolbar=document.getElementById('editToolbar');
+  const frame=document.getElementById('pframe');
+  if(!toolbar.contains(e.target) && e.target!==frame){
+    hideToolbar();
+  }
+});
 </script>
 </body>
 </html>
