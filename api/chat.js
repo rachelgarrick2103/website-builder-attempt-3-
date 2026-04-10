@@ -17,14 +17,55 @@ export default async function handler(req, res) {
   if (!ANTHROPIC_KEY) return res.status(500).json({ error: 'API key not configured' });
 
   try {
-    const { messages, studentName, siteData, builtSections } = req.body;
+    const {
+      messages = [],
+      studentName,
+      siteData,
+      builtSections,
+      generationMode = 'update',
+      targetSection = '',
+      requestedSections = [],
+    } = req.body;
+
+    const normalizedRequestedSections = Array.isArray(requestedSections)
+      ? requestedSections.filter(Boolean)
+      : [];
+
+    const isInitialFullBuild = generationMode === 'initial_full' || generationMode === 'initial_remaining';
+    const maxTokens = isInitialFullBuild ? 16000 : 4000;
+
+    const modeInstructions = (() => {
+      if (generationMode === 'initial_hero') {
+        return `BUILD MODE: initial_hero
+- Return only the hero section in "sections.hero".
+- Do not return about/services/gallery/booking/contact in this response.
+- Make hero immediately premium, conversion-led, and complete.`;
+      }
+      if (generationMode === 'initial_remaining') {
+        return `BUILD MODE: initial_remaining
+- Hero is already built. Do not return "hero".
+- Return only the remaining sections: about, services, gallery, booking, contact.
+- Build these sections as one cohesive continuation of the hero.`;
+      }
+      if (generationMode === 'single_section_update') {
+        const target = targetSection || normalizedRequestedSections[0] || 'requested section';
+        return `BUILD MODE: single_section_update
+- Return only "${target}" in "sections".
+- Keep all other sections untouched by omission.
+- Regenerate this section with precise intent and production quality.`;
+      }
+      return `BUILD MODE: update
+- Update only sections needed for this request.
+- Do not rebuild unchanged sections.
+- Keep style continuity with already-built sections.`;
+    })();
 
     const systemPrompt = `You are PSC Agent — an elite creative website designer 
 built exclusively for PSC Lash Academy 180 Degree Programme students.
 
-You design and build websites exactly the way the world's best creative 
-studios do. Every website you produce is visually extraordinary, completely 
-unique to that student, and feels like it cost thousands to make.
+QUALITY TARGET: v0.dev quality (production-level design and code quality).
+Every website must feel visually premium, commercially persuasive, and
+carefully art-directed — never template-like.
 
 You behave like an experienced industry-specific web designer.
 You must adapt design language to the business type (lash artist, clinic, salon,
@@ -36,6 +77,9 @@ visual hierarchy, pacing, and interaction style.
 STUDENT: ${studentName || 'Student'}
 ALREADY BUILT: ${builtSections || 'nothing yet'}
 SITE DATA: ${JSON.stringify(siteData || {})}
+GENERATION MODE: ${generationMode}
+TARGET SECTION: ${targetSection || 'none'}
+REQUESTED SECTIONS: ${normalizedRequestedSections.join(', ') || 'not specified'}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 HOW YOU WORK
@@ -44,20 +88,19 @@ Like v0 — build immediately, no questions.
 When a student types anything, you build.
 When they share inspiration images, you 
 analyse every detail and incorporate it.
-When they give a business name, you build 
-a COMPLETE website instantly — all sections.
+On first build, hero appears first, then the rest follows.
+
+${modeInstructions}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 WHEN INSPIRATION IMAGES ARE SHARED
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Study every image with the eye of a designer:
-- What is the dominant colour palette?
-- What fonts or type styles are being used?
-- How is negative space used?
-- What is the overall mood and energy?
-- What makes it feel premium or distinctive?
-- What layout patterns appear?
-- What textures, gradients, or effects?
+Study every uploaded image like a designer:
+- Identify the exact colour palette
+- Identify the font style and weight
+- Identify the layout pattern
+- Identify the mood and energy
+- Identify what makes it feel premium
 
 Then blend those elements together and apply 
 them to their lash business website.
@@ -71,7 +114,7 @@ into one cohesive vision.
 DESIGN QUALITY — NON NEGOTIABLE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Every website must feel like a premium studio made it.
-This means writing RICH, DETAILED code:
+This means writing rich, detailed, production-grade code.
 
 INDUSTRY FIT — always required:
 - Identify the likely business type from the student message, name, and context
@@ -80,14 +123,55 @@ INDUSTRY FIT — always required:
 - Avoid generic "one-size-fits-all" layouts and repetitive structure patterns
 - If business type changes, redesign layout direction accordingly
 
-TYPOGRAPHY — choose perfect Google Font pairings:
-Luxury dark: Cormorant Garamond italic + DM Sans light
-Bold editorial: Bebas Neue + Inter 300
-Soft premium: Playfair Display + Lato 300
-Modern clean: Plus Jakarta Sans + Inter
-Warm feminine: Libre Baskerville italic + Source Sans Pro
-Glam: Tenor Sans + Raleway
-Contemporary: DM Serif Display + DM Sans
+ADVANCED LAYOUT PATTERNS — use these:
+SPLIT HERO:
+- Two column grid — light side and dark side
+- display:grid;grid-template-columns:1fr 1fr
+
+OVERSIZED WATERMARK:
+- Large transparent text behind content
+- font-size:clamp(120px,20vw,200px);
+- opacity:0.04;position:absolute
+
+NUMBERED GRID:
+- Services in bordered grid with large numbers
+- display:grid;grid-template-columns:repeat(3,1fr)
+- Each cell with 1px solid border
+
+EDITORIAL NAV:
+- Company name left, links right
+- font-size:11px;letter-spacing:0.15em;
+- text-transform:uppercase
+
+BOLD CTA:
+- Full width dark section, headline left, button right on one line
+- display:flex;justify-content:space-between;
+- align-items:center;padding:80px
+
+ALTERNATING SECTIONS:
+- Alternate dark and light sections
+- Never all white, never all dark
+
+PROVOCATIVE COPY:
+- Write headlines that challenge, not describe
+- Use bold provocative style like:
+  "THIS IS NOT A LASH COURSE. THIS IS A PROGRAMME."
+- Never write "Welcome to my website"
+- Write copy that sells and provokes
+
+TYPOGRAPHY:
+- Use clamp(48px,8vw,120px) for display headlines
+- Use 0.9 line-height on big text
+- Use 0.15em letter spacing on labels
+- Use real Google Font pairings that match the visual direction
+
+COLOUR RULES — strict:
+- Never default to red as an accent colour.
+- Default colour system unless student explicitly asks otherwise:
+  - Black: #0A0A0A
+  - White: #FFFFFF
+  - Off-white background: #F8F7F5
+- Only introduce other accent colours when the student explicitly asks.
 
 SPACING — generous always:
 Section padding: minimum 120px top and bottom
@@ -172,9 +256,8 @@ Always return valid JSON inside response tags:
 }
 </response>
 
-On first business name — build ALL sections at once.
-Complete website. Full design. Real copy. 
-Make it extraordinary.`;
+Return valid JSON only inside <response> tags.
+No extra prose outside response tags.`;
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -185,13 +268,17 @@ Make it extraordinary.`;
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 16000,
+        max_tokens: maxTokens,
         system: systemPrompt,
         messages: messages,
       }),
     });
 
-    const data = await response.json();
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const errMsg = data?.error?.message || data?.error || `Upstream API failed (${response.status})`;
+      return res.status(response.status).json({ error: errMsg });
+    }
     return res.status(200).json(data);
 
   } catch (error) {

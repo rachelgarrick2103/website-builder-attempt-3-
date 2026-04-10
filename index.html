@@ -61,11 +61,11 @@ body{font-family:'Inter',sans-serif;font-weight:300;background:var(--black);colo
 .msg.user .msg-bubble{background:var(--white);color:var(--black)}
 .msg-bubble b{font-weight:500;color:var(--white)}
 .msg.user .msg-bubble b{color:var(--black)}
-.typing{display:flex;gap:4px;align-items:center;padding:2px 0}
-.td{width:5px;height:5px;border-radius:50%;background:var(--g3);animation:typing 1.2s ease infinite}
-.td:nth-child(2){animation-delay:0.2s}
-.td:nth-child(3){animation-delay:0.4s}
-@keyframes typing{0%,60%,100%{transform:translateY(0);opacity:0.4}30%{transform:translateY(-4px);opacity:1}}
+.thinking-row{display:flex;align-items:center;gap:8px;min-height:18px}
+.thinking-spinner{width:12px;height:12px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.24);border-top-color:rgba(255,255,255,0.9);animation:spin 0.8s linear infinite;flex-shrink:0}
+.thinking-text{font-size:11px;font-style:italic;color:var(--g3);opacity:0;transition:opacity 0.26s ease}
+.thinking-text.show{opacity:1}
+@keyframes spin{to{transform:rotate(360deg)}}
 
 /* Chips */
 .chips{display:flex;flex-wrap:wrap;gap:5px;padding:0 14px 10px;flex-shrink:0}
@@ -78,9 +78,11 @@ body{font-family:'Inter',sans-serif;font-weight:300;background:var(--black);colo
 .photo-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;max-height:180px;overflow:auto;padding-right:2px}
 .photo-slot{border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);padding:6px;cursor:pointer;transition:all 0.2s}
 .photo-slot:hover{border-color:rgba(255,255,255,0.28);background:rgba(255,255,255,0.08)}
+.photo-slot.loading{position:relative;pointer-events:none;opacity:0.8}
 .photo-thumb{width:100%;height:52px;object-fit:cover;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08)}
 .photo-label{display:block;margin-top:5px;font-size:9px;color:var(--g3);letter-spacing:0.05em}
 .photo-empty{display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--g4)}
+.photo-load{position:absolute;top:8px;right:8px;background:rgba(10,10,10,0.88);color:#fff;font-size:8px;letter-spacing:0.08em;padding:4px 6px;text-transform:uppercase}
 
 /* Input */
 .chat-input-area{border-top:1px solid rgba(255,255,255,0.06);padding:12px 14px;flex-shrink:0}
@@ -109,6 +111,11 @@ body{font-family:'Inter',sans-serif;font-weight:300;background:var(--black);colo
 .url-txt span{color:var(--black);font-weight:500}
 .prev-right{display:flex;gap:5px;align-items:center}
 .prev-status{font-size:9px;color:var(--g3);letter-spacing:0.1em;padding:0 8px}
+.build-progress{display:none;align-items:center;gap:12px;background:var(--white);border-bottom:1px solid var(--g2);padding:7px 14px}
+.build-progress.show{display:flex}
+.build-progress-track{height:2px;flex:1;background:var(--g2);overflow:hidden}
+.build-progress-bar{height:100%;width:0;background:var(--black);transition:width 0.45s ease}
+.build-progress-text{font-size:9px;letter-spacing:0.08em;color:var(--g3);white-space:nowrap}
 .dev-btn{background:transparent;border:1px solid var(--g2);padding:5px 10px;font-size:9px;font-weight:500;letter-spacing:0.1em;cursor:pointer;color:var(--g3);transition:all 0.15s}
 .dev-btn.act{background:var(--black);color:var(--white);border-color:var(--black)}
 .sec-tabs{display:flex;overflow-x:auto;background:var(--white);border-bottom:1px solid var(--g2);flex-shrink:0}
@@ -286,6 +293,10 @@ body{font-family:'Inter',sans-serif;font-weight:300;background:var(--black);colo
         <button class="dev-btn" onclick="setDev('mobile',this)">Mobile</button>
       </div>
     </div>
+    <div class="build-progress" id="buildProgress">
+      <div class="build-progress-track"><div class="build-progress-bar" id="buildProgressBar"></div></div>
+      <div class="build-progress-text" id="buildProgressText">Building your hero...</div>
+    </div>
     <div class="sec-tabs" id="secTabs"></div>
     <div class="prev-wrap" id="prevWrap">
       <div class="prev-empty" id="prevEmpty">
@@ -388,6 +399,16 @@ const FONT_PRESETS = {
   warm: { label: 'Warm: Libre Baskerville + Source Sans', heading: "'Libre Baskerville'", body: "'Source Sans 3'", query: 'family=Libre+Baskerville:ital,wght@0,400;1,400&family=Source+Sans+3:wght@300;400;600' },
   glam: { label: 'Glam: Tenor Sans + Raleway', heading: "'Tenor Sans'", body: "'Raleway'", query: 'family=Tenor+Sans&family=Raleway:wght@300;400;600' },
 };
+const THINKING_THOUGHTS = [
+  'Analysing your brand...',
+  'Choosing the perfect font pairing...',
+  'Laying out the editorial grid...',
+  'Writing your copy...',
+  'Polishing the colour palette...',
+  'Refining the typography...',
+  'Building your hero section...',
+  'Adding finishing details...',
+];
 
 let studentName = '';
 let studentCode = '';
@@ -400,13 +421,18 @@ let photos = {};
 let sectionOrder = [...SECTION_DEFAULT_ORDER];
 let versions = [];
 let activeSectionTab = 'hero';
-let palette = { bg: '#ffffff', text: '#141414', accent: '#a67c52' };
+let palette = { bg: '#F8F7F5', text: '#0A0A0A', accent: '#0A0A0A' };
 let fontPresetKey = 'editorial';
 let previewSaveTimer = null;
 let draggedSection = null;
 let versionDebounceTimer = null;
 let selectedImageNode = null;
 let selectedImageContainer = null;
+let photoSlotLoading = {};
+let buildProgressTimers = [];
+let thinkingIntervalTimer = null;
+let thinkingSwapTimer = null;
+let thinkingIdx = 0;
 
 function nowId() {
   return `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -425,6 +451,52 @@ function relativeTime(ts) {
   if (hr < 24) return `${hr} hour${hr === 1 ? '' : 's'} ago`;
   const day = Math.floor(hr / 24);
   return `${day} day${day === 1 ? '' : 's'} ago`;
+}
+
+function decodeEscapedHtml(raw) {
+  if (typeof raw !== 'string') return '';
+  if (!raw.includes('&lt;') || !raw.includes('&gt;')) return raw;
+  const decoder = document.createElement('textarea');
+  decoder.innerHTML = raw;
+  const decoded = decoder.value;
+  return /<(?:section|div|style|img|h1|h2|p|html|body|head|script)\b/i.test(decoded) ? decoded : raw;
+}
+
+function clearBuildProgressTimers() {
+  buildProgressTimers.forEach(timer => clearTimeout(timer));
+  buildProgressTimers = [];
+}
+
+function setBuildProgress(text, percent) {
+  const wrap = document.getElementById('buildProgress');
+  const bar = document.getElementById('buildProgressBar');
+  const label = document.getElementById('buildProgressText');
+  if (!wrap || !bar || !label) return;
+  wrap.classList.add('show');
+  if (text) label.textContent = text;
+  const clamped = Math.max(4, Math.min(100, Number(percent) || 4));
+  requestAnimationFrame(() => { bar.style.width = `${clamped}%`; });
+}
+
+function scheduleBuildProgress(steps) {
+  clearBuildProgressTimers();
+  (steps || []).forEach(step => {
+    const timer = setTimeout(() => setBuildProgress(step.text, step.percent), Math.max(0, step.delay || 0));
+    buildProgressTimers.push(timer);
+  });
+}
+
+function hideBuildProgress() {
+  clearBuildProgressTimers();
+  const wrap = document.getElementById('buildProgress');
+  const bar = document.getElementById('buildProgressBar');
+  if (!wrap || !bar) return;
+  bar.style.width = '100%';
+  const timer = setTimeout(() => {
+    wrap.classList.remove('show');
+    bar.style.width = '0%';
+  }, 480);
+  buildProgressTimers.push(timer);
 }
 
 function photoDataUri(slotKey) {
@@ -928,7 +1000,9 @@ function getActiveFontPreset() {
 function buildCompleteSiteHtml() {
   const preset = getActiveFontPreset();
   const fontHref = `https://fonts.googleapis.com/css2?${preset.query}&display=swap`;
-  const orderedSections = sectionOrder.map(id => injectSectionPhotos(id, sections[id] || '')).join('\n');
+  const orderedSections = sectionOrder
+    .map(id => decodeEscapedHtml(injectSectionPhotos(id, sections[id] || '')))
+    .join('\n');
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1111,7 +1185,10 @@ function updatePreview() {
     empty.style.display = 'flex';
     return;
   }
-  frame.srcdoc = buildCompleteSiteHtml();
+  const assembledHtml = decodeEscapedHtml(buildCompleteSiteHtml());
+  frame.removeAttribute('src');
+  frame.setAttribute('srcdoc', assembledHtml);
+  if (frame.srcdoc !== assembledHtml) frame.srcdoc = assembledHtml;
   frame.style.display = 'block';
   empty.style.display = 'none';
   resizeFrame();
@@ -1151,17 +1228,31 @@ function updateSlug() {
   document.getElementById('ovUrl').textContent = `${slug || 'yoursite'}.pscsites.com`;
 }
 
+function setPhotoSlotLoading(slotKey, loading) {
+  photoSlotLoading[slotKey] = Boolean(loading);
+  renderPhotoPanel();
+}
+
+async function waitForIdle(maxMs = 20000) {
+  const started = Date.now();
+  while (busy && (Date.now() - started) < maxMs) {
+    await new Promise(resolve => setTimeout(resolve, 150));
+  }
+}
+
 function renderPhotoPanel() {
   const grid = document.getElementById('photoGrid');
   if (!grid) return;
   grid.innerHTML = '';
   PHOTO_SLOTS.forEach(slot => {
     const card = document.createElement('div');
-    card.className = 'photo-slot';
+    const loading = Boolean(photoSlotLoading[slot.key]);
+    card.className = `photo-slot ${loading ? 'loading' : ''}`;
     const src = photoDataUri(slot.key);
-    card.innerHTML = src
+    const thumbHtml = src
       ? `<img class="photo-thumb" src="${src}" alt="${slot.label}"><span class="photo-label">${slot.label}</span>`
       : `<div class="photo-thumb photo-empty">Add photo</div><span class="photo-label">${slot.label}</span>`;
+    card.innerHTML = loading ? `${thumbHtml}<div class="photo-load">Updating...</div>` : thumbHtml;
 
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
@@ -1174,10 +1265,14 @@ function renderPhotoPanel() {
       reader.onload = async ev => {
         const base64 = String(ev.target.result).split(',')[1] || '';
         persistPhoto(slot.key, { type: file.type || 'image/jpeg', data: base64 });
-        renderPhotoPanel();
-        await regenerateSectionForPhoto(slot);
-        save();
-        showToast(`${slot.label} photo updated`);
+        setPhotoSlotLoading(slot.key, true);
+        try {
+          await regenerateSectionForPhoto(slot);
+          save();
+          showToast(`${slot.label} photo updated`);
+        } finally {
+          setPhotoSlotLoading(slot.key, false);
+        }
       };
       reader.readAsDataURL(file);
       fileInput.value = '';
@@ -1191,26 +1286,33 @@ function renderPhotoPanel() {
 
 async function regenerateSectionForPhoto(slot) {
   const targetSection = slot.section;
-  if (busy) return;
+  await waitForIdle();
+  setStatus(`Updating ${targetSection} photo...`);
   try {
     const msg = `Rebuild only the ${targetSection} section using the uploaded ${slot.label} image.`;
-    const resp = await callAPI(msg, [{ type: photos[slot.key]?.type || 'image/jpeg', data: photos[slot.key]?.data || '' }]);
+    const resp = await callAPI(
+      msg,
+      [{ type: photos[slot.key]?.type || 'image/jpeg', data: photos[slot.key]?.data || '' }],
+      { generationMode: 'single_section_update', targetSection: targetSection, requestedSections: [targetSection] },
+    );
     if (resp.sections && resp.sections[targetSection]) {
-      sections[targetSection] = injectSectionPhotos(targetSection, resp.sections[targetSection]);
+      sections[targetSection] = decodeEscapedHtml(injectSectionPhotos(targetSection, resp.sections[targetSection]));
       updatePreview();
       pushVersion('photo-ai');
     } else if (sections[targetSection]) {
-      sections[targetSection] = injectSectionPhotos(targetSection, sections[targetSection]);
+      sections[targetSection] = decodeEscapedHtml(injectSectionPhotos(targetSection, sections[targetSection]));
       updatePreview();
       pushVersion('photo');
     }
   } catch (err) {
     console.log('Photo regeneration failed:', err);
     if (sections[targetSection]) {
-      sections[targetSection] = injectSectionPhotos(targetSection, sections[targetSection]);
+      sections[targetSection] = decodeEscapedHtml(injectSectionPhotos(targetSection, sections[targetSection]));
       updatePreview();
       pushVersion('photo-fallback');
     }
+  } finally {
+    setStatus('Ready');
   }
 }
 
@@ -1263,16 +1365,42 @@ function fmt(text) {
 }
 
 function showTyping() {
+  rmTyping();
   const wrap = document.getElementById('msgs');
   const div = document.createElement('div');
   div.className = 'msg agent';
   div.id = 'typing';
-  div.innerHTML = `<div class="msg-av"><span>PSC</span></div><div class="msg-bubble"><div class="typing"><div class="td"></div><div class="td"></div><div class="td"></div></div></div>`;
+  div.innerHTML = `<div class="msg-av"><span>PSC</span></div><div class="msg-bubble"><div class="thinking-row"><span class="thinking-spinner" aria-hidden="true"></span><span id="thinkingText" class="thinking-text">Analysing your brand...</span></div></div>`;
   wrap.appendChild(div);
   wrap.scrollTop = wrap.scrollHeight;
+
+  const thoughtEl = document.getElementById('thinkingText');
+  if (!thoughtEl) return;
+  thinkingIdx = 0;
+  thoughtEl.textContent = THINKING_THOUGHTS[thinkingIdx];
+  requestAnimationFrame(() => thoughtEl.classList.add('show'));
+
+  thinkingIntervalTimer = setInterval(() => {
+    if (!thoughtEl.isConnected) {
+      rmTyping();
+      return;
+    }
+    thoughtEl.classList.remove('show');
+    clearTimeout(thinkingSwapTimer);
+    thinkingSwapTimer = setTimeout(() => {
+      if (!thoughtEl.isConnected) return;
+      thinkingIdx = (thinkingIdx + 1) % THINKING_THOUGHTS.length;
+      thoughtEl.textContent = THINKING_THOUGHTS[thinkingIdx];
+      thoughtEl.classList.add('show');
+    }, 220);
+  }, 1500);
 }
 
 function rmTyping() {
+  clearInterval(thinkingIntervalTimer);
+  clearTimeout(thinkingSwapTimer);
+  thinkingIntervalTimer = null;
+  thinkingSwapTimer = null;
   const t = document.getElementById('typing');
   if (t) t.remove();
 }
@@ -1294,6 +1422,34 @@ function cleanBase64(data) {
   return data.includes(',') ? data.split(',')[1] : data;
 }
 
+function filterSectionPatch(sectionPatch, allowedSections) {
+  const allowed = Array.isArray(allowedSections) && allowedSections.length ? allowedSections : SECTION_DEFAULT_ORDER;
+  const allowSet = new Set(allowed.filter(id => SECTION_DEFAULT_ORDER.includes(id)));
+  const patch = {};
+  Object.entries(sectionPatch || {}).forEach(([key, value]) => {
+    if (!allowSet.has(key)) return;
+    if (typeof value !== 'string' || !value.trim()) return;
+    patch[key] = decodeEscapedHtml(value);
+  });
+  return patch;
+}
+
+function applyApiResponse(resp, userText, options = {}) {
+  const filteredPatch = filterSectionPatch(resp.sections, options.allowedSections);
+  const changedKeys = Object.keys(filteredPatch);
+  if (changedKeys.length) {
+    const hydrated = hydrateSectionsWithPhotos(filteredPatch);
+    Object.assign(sections, hydrated);
+    maybeHandleCarouselInstruction(userText, changedKeys);
+    updatePreview();
+    pushVersion(options.versionReason || 'ai-update');
+  }
+  if (resp.siteData && typeof resp.siteData === 'object') {
+    Object.assign(siteData, resp.siteData);
+    updateSlug();
+  }
+}
+
 async function sendMsg() {
   const ta = document.getElementById('ta');
   const text = ta.value.trim();
@@ -1309,52 +1465,123 @@ async function sendMsg() {
   history.push({ role: 'user', content: msgText });
   busy = true;
   document.getElementById('sendBtn').disabled = true;
-  setStatus('PSC Agent is building...');
+  const isFirstBuild = Object.keys(sections).length === 0;
+  if (isFirstBuild) {
+    setStatus('Building your hero...');
+    setBuildProgress('Building your hero...', 16);
+    scheduleBuildProgress([
+      { delay: 1200, text: 'Building your hero...', percent: 34 },
+    ]);
+  } else {
+    setStatus('PSC Agent is building...');
+    setBuildProgress('Applying your updates...', 18);
+    scheduleBuildProgress([
+      { delay: 1200, text: 'Applying your updates...', percent: 58 },
+    ]);
+  }
   showTyping();
 
   try {
-    let resp;
-    try {
-      resp = await callAPI(msgText, imgsForRequest);
-    } catch (primaryErr) {
-      if (imgsForRequest.length > 0) {
-        console.log('Image upload failed, retrying text-only request:', primaryErr);
-        resp = await callAPI(msgText, []);
-      } else {
-        throw primaryErr;
+    if (isFirstBuild) {
+      let heroResp;
+      try {
+        heroResp = await callAPI(msgText, imgsForRequest, {
+          generationMode: 'initial_hero',
+          requestedSections: ['hero'],
+          targetSection: 'hero',
+        });
+      } catch (heroErr) {
+        if (imgsForRequest.length > 0) {
+          console.log('Hero build image upload failed, retrying text-only request:', heroErr);
+          heroResp = await callAPI(msgText, [], {
+            generationMode: 'initial_hero',
+            requestedSections: ['hero'],
+            targetSection: 'hero',
+          });
+        } else {
+          throw heroErr;
+        }
       }
-    }
 
-    rmTyping();
-    addMsg('agent', resp.message);
-    history.push({ role: 'assistant', content: resp.message });
+      rmTyping();
+      addMsg('agent', heroResp.message);
+      history.push({ role: 'assistant', content: heroResp.message });
+      applyApiResponse(heroResp, msgText, { allowedSections: ['hero'], versionReason: 'ai-hero' });
+      setStatus('Hero ready ✓');
 
-    if (resp.sections && Object.keys(resp.sections).length > 0) {
-      const hydrated = hydrateSectionsWithPhotos(resp.sections);
-      Object.assign(sections, hydrated);
-      maybeHandleCarouselInstruction(msgText, Object.keys(resp.sections));
-      updatePreview();
-      pushVersion('ai-update');
+      setBuildProgress('Adding your services...', 62);
+      scheduleBuildProgress([
+        { delay: 0, text: 'Adding your services...', percent: 62 },
+        { delay: 1400, text: 'Creating your about section...', percent: 80 },
+        { delay: 2600, text: 'Finishing your full website...', percent: 92 },
+      ]);
+      showTyping();
+
+      let remainingResp;
+      try {
+        remainingResp = await callAPI(msgText, imgsForRequest, {
+          generationMode: 'initial_remaining',
+          requestedSections: ['about', 'services', 'gallery', 'booking', 'contact'],
+        });
+      } catch (remainingErr) {
+        if (imgsForRequest.length > 0) {
+          console.log('Remaining build image upload failed, retrying text-only request:', remainingErr);
+          remainingResp = await callAPI(msgText, [], {
+            generationMode: 'initial_remaining',
+            requestedSections: ['about', 'services', 'gallery', 'booking', 'contact'],
+          });
+        } else {
+          throw remainingErr;
+        }
+      }
+
+      rmTyping();
+      addMsg('agent', remainingResp.message);
+      history.push({ role: 'assistant', content: remainingResp.message });
+      applyApiResponse(remainingResp, msgText, {
+        allowedSections: ['about', 'services', 'gallery', 'booking', 'contact'],
+        versionReason: 'ai-full',
+      });
+      setStatus('Website complete ✓');
+      setTimeout(() => setStatus('Ready'), 2200);
+    } else {
+      let resp;
+      try {
+        resp = await callAPI(msgText, imgsForRequest, { generationMode: 'update' });
+      } catch (primaryErr) {
+        if (imgsForRequest.length > 0) {
+          console.log('Image upload failed, retrying text-only request:', primaryErr);
+          resp = await callAPI(msgText, [], { generationMode: 'update' });
+        } else {
+          throw primaryErr;
+        }
+      }
+
+      rmTyping();
+      addMsg('agent', resp.message);
+      history.push({ role: 'assistant', content: resp.message });
+      applyApiResponse(resp, msgText, { versionReason: 'ai-update' });
       setStatus('Updated ✓');
       setTimeout(() => setStatus('Ready'), 1800);
     }
-    if (resp.siteData) {
-      Object.assign(siteData, resp.siteData);
-      updateSlug();
-    }
+    hideBuildProgress();
     save();
   } catch (err) {
     console.log('sendMsg failed:', err);
     rmTyping();
+    hideBuildProgress();
     addMsg('agent', 'Something went wrong. Please try again.');
     setStatus('Error');
+  } finally {
+    busy = false;
+    document.getElementById('sendBtn').disabled = false;
   }
-
-  busy = false;
-  document.getElementById('sendBtn').disabled = false;
 }
 
-async function callAPI(msg, imgs) {
+async function callAPI(msg, imgs, options = {}) {
+  const generationMode = options.generationMode || 'update';
+  const targetSection = options.targetSection || '';
+  const requestedSections = Array.isArray(options.requestedSections) ? options.requestedSections : [];
   const messages = history.slice(-12).map(m => ({
     role: m.role === 'assistant' ? 'assistant' : 'user',
     content: m.content,
@@ -1389,6 +1616,9 @@ async function callAPI(msg, imgs) {
       studentName: studentName,
       siteData: siteData,
       builtSections: sectionOrder.filter(k => sections[k]).join(', '),
+      generationMode,
+      targetSection,
+      requestedSections,
     }),
   });
 
