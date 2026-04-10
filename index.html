@@ -61,11 +61,11 @@ body{font-family:'Inter',sans-serif;font-weight:300;background:var(--black);colo
 .msg.user .msg-bubble{background:var(--white);color:var(--black)}
 .msg-bubble b{font-weight:500;color:var(--white)}
 .msg.user .msg-bubble b{color:var(--black)}
-.typing{display:flex;gap:4px;align-items:center;padding:2px 0}
-.td{width:5px;height:5px;border-radius:50%;background:var(--g3);animation:typing 1.2s ease infinite}
-.td:nth-child(2){animation-delay:0.2s}
-.td:nth-child(3){animation-delay:0.4s}
-@keyframes typing{0%,60%,100%{transform:translateY(0);opacity:0.4}30%{transform:translateY(-4px);opacity:1}}
+.thinking-row{display:flex;align-items:center;gap:8px;min-height:18px}
+.thinking-spinner{width:12px;height:12px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.24);border-top-color:rgba(255,255,255,0.9);animation:spin 0.8s linear infinite;flex-shrink:0}
+.thinking-text{font-size:11px;font-style:italic;color:var(--g3);opacity:0;transition:opacity 0.26s ease}
+.thinking-text.show{opacity:1}
+@keyframes spin{to{transform:rotate(360deg)}}
 
 /* Chips */
 .chips{display:flex;flex-wrap:wrap;gap:5px;padding:0 14px 10px;flex-shrink:0}
@@ -399,6 +399,16 @@ const FONT_PRESETS = {
   warm: { label: 'Warm: Libre Baskerville + Source Sans', heading: "'Libre Baskerville'", body: "'Source Sans 3'", query: 'family=Libre+Baskerville:ital,wght@0,400;1,400&family=Source+Sans+3:wght@300;400;600' },
   glam: { label: 'Glam: Tenor Sans + Raleway', heading: "'Tenor Sans'", body: "'Raleway'", query: 'family=Tenor+Sans&family=Raleway:wght@300;400;600' },
 };
+const THINKING_THOUGHTS = [
+  'Analysing your brand...',
+  'Choosing the perfect font pairing...',
+  'Laying out the editorial grid...',
+  'Writing your copy...',
+  'Polishing the colour palette...',
+  'Refining the typography...',
+  'Building your hero section...',
+  'Adding finishing details...',
+];
 
 let studentName = '';
 let studentCode = '';
@@ -420,6 +430,9 @@ let selectedImageNode = null;
 let selectedImageContainer = null;
 let photoSlotLoading = {};
 let buildProgressTimers = [];
+let thinkingIntervalTimer = null;
+let thinkingSwapTimer = null;
+let thinkingIdx = 0;
 
 function nowId() {
   return `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -1352,16 +1365,42 @@ function fmt(text) {
 }
 
 function showTyping() {
+  rmTyping();
   const wrap = document.getElementById('msgs');
   const div = document.createElement('div');
   div.className = 'msg agent';
   div.id = 'typing';
-  div.innerHTML = `<div class="msg-av"><span>PSC</span></div><div class="msg-bubble"><div class="typing"><div class="td"></div><div class="td"></div><div class="td"></div></div></div>`;
+  div.innerHTML = `<div class="msg-av"><span>PSC</span></div><div class="msg-bubble"><div class="thinking-row"><span class="thinking-spinner" aria-hidden="true"></span><span id="thinkingText" class="thinking-text">Analysing your brand...</span></div></div>`;
   wrap.appendChild(div);
   wrap.scrollTop = wrap.scrollHeight;
+
+  const thoughtEl = document.getElementById('thinkingText');
+  if (!thoughtEl) return;
+  thinkingIdx = 0;
+  thoughtEl.textContent = THINKING_THOUGHTS[thinkingIdx];
+  requestAnimationFrame(() => thoughtEl.classList.add('show'));
+
+  thinkingIntervalTimer = setInterval(() => {
+    if (!thoughtEl.isConnected) {
+      rmTyping();
+      return;
+    }
+    thoughtEl.classList.remove('show');
+    clearTimeout(thinkingSwapTimer);
+    thinkingSwapTimer = setTimeout(() => {
+      if (!thoughtEl.isConnected) return;
+      thinkingIdx = (thinkingIdx + 1) % THINKING_THOUGHTS.length;
+      thoughtEl.textContent = THINKING_THOUGHTS[thinkingIdx];
+      thoughtEl.classList.add('show');
+    }, 220);
+  }, 1500);
 }
 
 function rmTyping() {
+  clearInterval(thinkingIntervalTimer);
+  clearTimeout(thinkingSwapTimer);
+  thinkingIntervalTimer = null;
+  thinkingSwapTimer = null;
   const t = document.getElementById('typing');
   if (t) t.remove();
 }
